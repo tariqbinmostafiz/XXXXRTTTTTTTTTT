@@ -129,7 +129,7 @@ public class App extends Application {
 
     public static File getWaEnhancerFolder() {
         var download = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        var waEnhancerFolder = new File(download, "WaEnhancer");
+        var waEnhancerFolder = new File(download, "WaEnhancerX");
         if (!waEnhancerFolder.exists())
             waEnhancerFolder.mkdirs();
         return waEnhancerFolder;

@@ -172,7 +172,7 @@ public class AlertDialogWpp {
 
     public AlertDialogWpp setTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
-            title = "WaEnhancer";
+            title = "WaEnhancer X";
         }
         mTitleText = title;
         mAlertDialog.setTitle(title);
@@ -201,7 +201,7 @@ public class AlertDialogWpp {
 
     public AlertDialogWpp setTitle(CharSequence title) {
         if (title == null || title.toString().trim().isEmpty()) {
-            title = "WaEnhancer";
+            title = "WaEnhancer X";
         }
         mTitleText = title;
         mAlertDialog.setTitle(title);

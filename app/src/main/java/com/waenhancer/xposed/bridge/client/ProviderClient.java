@@ -69,7 +69,7 @@ public class ProviderClient extends BaseClient {
 
             try {
                 var resolver = Utils.getApplication().getContentResolver();
-                var bundle = resolver.call(Settings.System.CONTENT_URI, "WaEnhancer", "getHookBinder", null);
+                var bundle = resolver.call(Settings.System.CONTENT_URI, "WaEnhancer X", "getHookBinder", null);
                 var binder = bundle != null ? bundle.getBinder("binder") : null;
                 if (binder != null) {
                     service = WaeIIFace.Stub.asInterface(binder);

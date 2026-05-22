@@ -155,7 +155,7 @@ public class ActivityController extends Feature {
                 ContactPickerPreference.updatePreferenceValue(pickingKey, contacts);
             }
         } catch (Exception e) {
-            de.robv.android.xposed.XposedBridge.log("[WaEnhancer] Error processing embedded contact picker result: " + e.getMessage());
+            de.robv.android.xposed.XposedBridge.log("[WaEnhancerX] Error processing embedded contact picker result: " + e.getMessage());
         }
     }
 

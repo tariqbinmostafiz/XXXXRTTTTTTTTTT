@@ -156,7 +156,7 @@ public class EmbeddedSettingsDialogFragment extends DialogFragment {
         if (current instanceof EmbeddedBasePreferenceFragment) {
             title = ((EmbeddedBasePreferenceFragment) current).getToolbarTitle();
         } else if (current instanceof EmbeddedMainFragment) {
-            title = "WaEnhancer";
+            title = "WaEnhancer X";
         }
         if (title != null) {
             host.titleView.setText(title);
@@ -224,12 +224,12 @@ public class EmbeddedSettingsDialogFragment extends DialogFragment {
                     return;
                 } catch (Throwable t) {
                     de.robv.android.xposed.XposedBridge.log(
-                            "[WaEnhancer] show() via reflection failed: " + t.getMessage());
+                            "[WaEnhancerX] show() via reflection failed: " + t.getMessage());
                 }
             }
         } catch (Throwable t) {
             de.robv.android.xposed.XposedBridge.log(
-                    "[WaEnhancer] EmbeddedSettingsDialogFragment.show() error: " + t.getMessage());
+                    "[WaEnhancerX] EmbeddedSettingsDialogFragment.show() error: " + t.getMessage());
         }
 
         // Fallback: open in module's own process.

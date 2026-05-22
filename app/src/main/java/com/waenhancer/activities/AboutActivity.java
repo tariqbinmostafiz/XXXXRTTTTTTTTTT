@@ -48,7 +48,7 @@ public class AboutActivity extends BaseActivity {
     private ContributorAdapter adapter;
     private List<Contributor> contributorList = new ArrayList<>();
 
-    private static final String API_URL = "https://api.github.com/repos/mubashardev/WaEnhancer/contributors";
+    private static final String API_URL = "https://api.github.com/repos/mubashardev/WaEnhancerX/contributors";
     private static final OkHttpClient client = new OkHttpClient();
 
     @Override

@@ -53,7 +53,7 @@ public class ChangelogActivity extends BaseActivity {
     private final List<JSONObject> stableReleases = new ArrayList<>();
     private final List<JSONObject> betaReleases = new ArrayList<>();
     private boolean downgradesEnabled = false;
-    private static final String RELEASES_API = "https://api.github.com/repos/mubashardev/WaEnhancer/releases";
+    private static final String RELEASES_API = "https://api.github.com/repos/mubashardev/WaEnhancerX/releases";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

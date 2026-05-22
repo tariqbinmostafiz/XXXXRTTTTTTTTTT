@@ -264,7 +264,7 @@ public class BottomSheetHelper {
         com.bumptech.glide.Glide.with(context)
                 .load(new com.bumptech.glide.load.model.GlideUrl(avatarUrl,
                         new com.bumptech.glide.load.model.LazyHeaders.Builder()
-                                .addHeader("User-Agent", "WaEnhancer-App")
+                                .addHeader("User-Agent", "WaEnhancerX-App")
                                 .build()))
                 .placeholder(R.drawable.ic_github)
                 .into(ivAvatar);
@@ -291,7 +291,7 @@ public class BottomSheetHelper {
 
         okhttp3.Request request = new okhttp3.Request.Builder()
                 .url("https://api.github.com/users/" + username)
-                .header("User-Agent", "WaEnhancer-App")
+                .header("User-Agent", "WaEnhancerX-App")
                 .header("Accept", "application/vnd.github.v3+json")
                 .build();
 
@@ -522,8 +522,8 @@ public class BottomSheetHelper {
         }
 
         okhttp3.Request request = new okhttp3.Request.Builder()
-                .url("https://api.github.com/repos/mubashardev/WaEnhancer/stats/contributors")
-                .header("User-Agent", "WaEnhancer-App")
+                .url("https://api.github.com/repos/mubashardev/WaEnhancerX/stats/contributors")
+                .header("User-Agent", "WaEnhancerX-App")
                 .header("Accept", "application/vnd.github.v3+json")
                 .build();
 

@@ -20,7 +20,7 @@ import java.io.InputStreamReader;
 
 public class CallRecordingSettingsActivity extends BaseActivity {
 
-    private static final String TAG = "WaEnhancer";
+    private static final String TAG = "WaEnhancerX";
 
     private ActivityCallRecordingSettingsBinding binding;
     private SharedPreferences prefs;

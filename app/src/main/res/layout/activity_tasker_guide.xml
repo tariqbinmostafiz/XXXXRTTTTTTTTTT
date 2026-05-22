@@ -74,7 +74,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_small"
                         android:lineSpacingMultiplier="1.4"
-                        android:text="WaEnhancer bridges WhatsApp with automation apps using Android Intents. When a message arrives or is sent, a broadcast is fired with all the details — your automation app catches it and acts on it."
+                        android:text="WaEnhancer X bridges WhatsApp with automation apps using Android Intents. When a message arrives or is sent, a broadcast is fired with all the details — your automation app catches it and acts on it."
                         android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOnPrimaryContainer" />
 
@@ -480,7 +480,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
                                 android:lineSpacingMultiplier="1.3"
-                                android:text="• Active Notification Required: Since messages are sent via Android's RemoteInput reply mechanism, a status bar notification from the target contact must be actively present. It works perfectly for immediate auto-replies, but cannot initiate new chats.\n• Package Name: You can target either WaEnhancer ('com.waenhancer') or WhatsApp ('com.whatsapp' / 'com.whatsapp.w4b') as the package name in your automation app."
+                                android:text="• Active Notification Required: Since messages are sent via Android's RemoteInput reply mechanism, a status bar notification from the target contact must be actively present. It works perfectly for immediate auto-replies, but cannot initiate new chats.\n• Package Name: You can target either WaEnhancer X ('com.waenhancer') or WhatsApp ('com.whatsapp' / 'com.whatsapp.w4b') as the package name in your automation app."
                                 android:textAppearance="?attr/textAppearanceBodySmall"
                                 android:textColor="?attr/colorOnPrimaryContainer" />
                         </LinearLayout>

@@ -125,7 +125,7 @@ public class ContactPickerPreference extends Preference implements Preference.On
                     return true;
                 }
             } catch (Exception e) {
-                de.robv.android.xposed.XposedBridge.log("[WaEnhancer] Failed to launch WhatsApp contact picker: " + e.getMessage());
+                de.robv.android.xposed.XposedBridge.log("[WaEnhancerX] Failed to launch WhatsApp contact picker: " + e.getMessage());
             }
         }
 

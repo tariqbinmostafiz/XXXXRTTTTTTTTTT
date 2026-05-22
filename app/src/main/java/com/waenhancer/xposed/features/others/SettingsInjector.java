@@ -49,7 +49,7 @@ public class SettingsInjector extends Feature {
             Class<?> directClass = XposedHelpers.findClassIfExists(SETTINGS_TAB_ACTIVITY, classLoader);
             settingsActivityClass = directClass != null ? directClass : Unobfuscator.loadSettingsActivityClass(classLoader);
         } catch (Throwable t) {
-            XposedBridge.log("[WaEnhancer] SettingsInjector disabled: unable to resolve settings activity");
+            XposedBridge.log("[WaEnhancerX] SettingsInjector disabled: unable to resolve settings activity");
             return;
         }
         if (settingsActivityClass == null) return;
@@ -179,7 +179,7 @@ public class SettingsInjector extends Feature {
                 }
             }
         } catch (Throwable t) {
-            XposedBridge.log("[WaEnhancer] SettingsInjector: native view tile error: " + t.getMessage());
+            XposedBridge.log("[WaEnhancerX] SettingsInjector: native view tile error: " + t.getMessage());
         }
     }
 
@@ -384,7 +384,7 @@ public class SettingsInjector extends Feature {
 
             return rowLayout;
         } catch (Throwable t) {
-            XposedBridge.log("[WaEnhancer] SettingsInjector: Error creating dynamic setting row: " + t.getMessage());
+            XposedBridge.log("[WaEnhancerX] SettingsInjector: Error creating dynamic setting row: " + t.getMessage());
             return null;
         }
     }
@@ -432,7 +432,7 @@ public class SettingsInjector extends Feature {
             params.rightMargin = margin;
             ((FrameLayout) root).addView(floatingButton, params);
         } catch (Throwable t) {
-            XposedBridge.log("[WaEnhancer] SettingsInjector: direct button error: " + t.getMessage());
+            XposedBridge.log("[WaEnhancerX] SettingsInjector: direct button error: " + t.getMessage());
         }
     }
 
@@ -524,7 +524,7 @@ public class SettingsInjector extends Feature {
                 });
             }
         } catch (Throwable t) {
-            XposedBridge.log("[WaEnhancer] SettingsInjector: Toolbar error: " + t.getMessage());
+            XposedBridge.log("[WaEnhancerX] SettingsInjector: Toolbar error: " + t.getMessage());
         }
     }
 

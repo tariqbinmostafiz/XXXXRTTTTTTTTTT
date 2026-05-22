@@ -66,7 +66,7 @@ public class CallRecording extends Feature {
     private final AtomicReference<ScheduledFuture<?>> delayedStartFuture = new AtomicReference<>();
 
     private final ScheduledExecutorService delayedStartScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread thread = new Thread(r, "WaEnhancer-CallDelayedStart");
+        Thread thread = new Thread(r, "WaEnhancerX-CallDelayedStart");
         thread.setDaemon(true);
         return thread;
     });

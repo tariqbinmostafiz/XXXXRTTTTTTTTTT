@@ -464,7 +464,7 @@ public class FeatureLoader {
                                 msg = sb.toString().trim();
                             }
 
-                            if (msg.isEmpty()) msg = "WhatsApp needs to be restarted to apply your recent changes in WaEnhancer. Would you like to restart now?";
+                            if (msg.isEmpty()) msg = "WhatsApp needs to be restarted to apply your recent changes in WaEnhancer X. Would you like to restart now?";
                             if (btnRestart.isEmpty()) btnRestart = "Restart WhatsApp";
                             if (btnCancel.isEmpty()) btnCancel = "Cancel";
 
