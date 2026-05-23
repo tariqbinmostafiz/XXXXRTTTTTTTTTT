@@ -1,5 +1,8 @@
 [Improvements]
-- Optimized performance
+- Completely removed Google Crashlytics to guarantee a 100% tracker-free and secure environment
+- Refactored and highly optimized core Java hooking architecture for zero-lag performance
+- Enhanced overall module stability by utilizing lightweight native integration
 
 [Fixes]
-- Fixed Status Saving
+- Fixed underlying app crashes and memory issues
+- Fixed minor UI glitches for a smoother native experience
