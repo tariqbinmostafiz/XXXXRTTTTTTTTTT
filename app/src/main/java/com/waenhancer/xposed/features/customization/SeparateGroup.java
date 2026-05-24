@@ -142,43 +142,47 @@ public class SeparateGroup extends Feature {
                                     }
                                 }
 
-                                if (tabs.contains(CHATS) && tabInstances.containsKey(CHATS)) {
-                                    Object chatsBadge;
-                                    if (chatCount <= 0) {
-                                        chatsBadge = XposedHelpers.getStaticObjectField(emptyBadgeClass, "A00");
-                                    } else {
-                                        chatsBadge = badgeWrapperConstructor.newInstance(
-                                                badgeItemConstructor.newInstance(chatCount)
-                                        );
-                                    }
-                                    param.args[1] = chatsBadge;
-                                }
+                                final int finalChatCount = chatCount;
+                                final int finalGroupCount = groupCount;
 
-                                if (tabs.contains(GROUPS) && tabInstances.containsKey(GROUPS)) {
-                                    Object groupsBadge;
-                                    if (groupCount <= 0) {
-                                        groupsBadge = XposedHelpers.getStaticObjectField(emptyBadgeClass, "A00");
-                                    } else {
-                                        groupsBadge = badgeWrapperConstructor.newInstance(
-                                                badgeItemConstructor.newInstance(groupCount)
-                                        );
-                                    }
-                                    // Invoke on main thread
-                                    final Object finalGroupsBadge = groupsBadge;
-                                    final int groupsIndex = tabs.indexOf(GROUPS);
-                                    android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
-                                    handler.post(() -> {
-                                        try {
+                                android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+                                handler.post(() -> {
+                                    try {
+                                        if (tabs.contains(CHATS) && tabInstances.containsKey(CHATS)) {
+                                            Object chatsBadge;
+                                            if (finalChatCount <= 0) {
+                                                chatsBadge = XposedHelpers.getStaticObjectField(emptyBadgeClass, "A00");
+                                            } else {
+                                                chatsBadge = badgeWrapperConstructor.newInstance(
+                                                        badgeItemConstructor.newInstance(finalChatCount)
+                                                );
+                                            }
                                             XposedBridge.invokeOriginalMethod(
                                                     param.method,
                                                     param.thisObject,
-                                                    new Object[]{param.args[0], finalGroupsBadge, groupsIndex}
+                                                    new Object[]{param.args[0], chatsBadge, tabs.indexOf(CHATS)}
                                             );
-                                        } catch (Throwable t) {
-                                            XposedBridge.log("SeparateGroup: Error setting group badge: " + t);
                                         }
-                                    });
-                                }
+
+                                        if (tabs.contains(GROUPS) && tabInstances.containsKey(GROUPS)) {
+                                            Object groupsBadge;
+                                            if (finalGroupCount <= 0) {
+                                                groupsBadge = XposedHelpers.getStaticObjectField(emptyBadgeClass, "A00");
+                                            } else {
+                                                groupsBadge = badgeWrapperConstructor.newInstance(
+                                                        badgeItemConstructor.newInstance(finalGroupCount)
+                                                );
+                                            }
+                                            XposedBridge.invokeOriginalMethod(
+                                                    param.method,
+                                                    param.thisObject,
+                                                    new Object[]{param.args[0], groupsBadge, tabs.indexOf(GROUPS)}
+                                            );
+                                        }
+                                    } catch (Throwable t) {
+                                        XposedBridge.log("SeparateGroup: Error setting badges: " + t);
+                                    }
+                                });
                             } catch (Throwable t) {
                                 XposedBridge.log("SeparateGroup: Error in tab count thread: " + t);
                             }
