@@ -102,7 +102,8 @@ public class App extends Application {
                     com.waenhancer.xposed.utils.ProHelper.setForceFree(true);
                     
                     try {
-                        com.waenhancer.xposed.utils.LicenseManager.makePrefsWorldReadable(App.this);
+                        Class<?> managerClass = Class.forName("com.waenhancer.xposed.utils.LicenseManager");
+                        managerClass.getMethod("makePrefsWorldReadable", Context.class).invoke(null, App.this);
                     } catch (Exception ignored) {}
 
                     try {
@@ -115,7 +116,10 @@ public class App extends Application {
             } catch (Throwable ignored) {}
 
             // Perform silent background license re-verification at startup
-            com.waenhancer.xposed.utils.LicenseManager.silentCheck(App.this);
+            try {
+                Class<?> managerClass = Class.forName("com.waenhancer.xposed.utils.LicenseManager");
+                managerClass.getMethod("silentCheck", Context.class).invoke(null, App.this);
+            } catch (Exception ignored) {}
         }
         
         var sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
