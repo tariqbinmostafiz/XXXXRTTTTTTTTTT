@@ -34,6 +34,11 @@
 -keep class com.waenhancer.pro.ProFeature {
     public <init>(java.lang.ClassLoader, android.content.SharedPreferences);
     native <methods>;
+    protected void setupNativeHooks(java.lang.String[]);
+}
+
+-keepclassmembers class * extends com.waenhancer.pro.ProFeature {
+    protected void setupNativeHooks(java.lang.String[]);
 }
 
 # Keep Native Security Bridge
@@ -118,3 +123,8 @@
 -keep class okio.** { *; }
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# Keep all UI fragments and enclosing classes to prevent reflection/XML lookup failures
+-keep class com.waenhancer.ui.fragments.** { *; }
+-keep class com.waenhancer.xposed.features.others.** { *; }
+-keep class * extends androidx.fragment.app.Fragment { *; }
