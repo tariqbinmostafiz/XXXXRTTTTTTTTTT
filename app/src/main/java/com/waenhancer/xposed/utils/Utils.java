@@ -87,10 +87,20 @@ public class Utils {
 
     public static void openModule(Context context) {
         try {
-            Intent intent = new Intent();
-            intent.setComponent(new ComponentName("com.waenhancer", "com.waenhancer.xposed.features.others.EmbeddedSettingsActivity"));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
+            XPrefManager.reload();
+            SharedPreferences prefs = XPrefManager.getPref(context);
+            String mode = prefs != null ? prefs.getString("open_settings_mode", "1") : "1";
+            if ("1".equals(mode) && context instanceof Activity) {
+                com.waenhancer.xposed.features.others.EmbeddedSettingsDialogFragment.show((Activity) context);
+            } else {
+                Intent intent = context.getPackageManager().getLaunchIntentForPackage("com.waenhancer");
+                if (intent == null) {
+                    intent = new Intent();
+                    intent.setComponent(new ComponentName("com.waenhancer", "com.waenhancer.activities.MainActivity"));
+                }
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            }
         } catch (Exception e) {
             Toast.makeText(context, "Error opening WaEnhancer X: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }

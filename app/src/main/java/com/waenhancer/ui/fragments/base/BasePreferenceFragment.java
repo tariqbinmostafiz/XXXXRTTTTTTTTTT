@@ -232,7 +232,8 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
                 s.equals("update_alert_frequency") || 
                 s.equals("last_update_check") || 
                 s.equals("show_hook_toast") || 
-                s.equals("open_waex");
+                s.equals("open_waex") ||
+                s.equals("open_settings_mode");
 
         if (!isInternalKey) {
             ;

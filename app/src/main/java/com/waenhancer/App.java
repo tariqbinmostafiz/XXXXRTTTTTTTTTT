@@ -61,20 +61,21 @@ public class App extends Application {
         
         // Initialize Firebase manually only in the standalone process to prevent SecurityException in host processes
         // Synchronous initialization is safe here because FirebaseInitProvider is removed in the Manifest.
-        if (Application.getProcessName().equals(BuildConfig.APPLICATION_ID)) {
+        if (Application.getProcessName().equals(BuildConfig.APPLICATION_ID) && !BuildConfig.DEBUG) {
             try {
-                Class<?> firebaseAppClass = Class.forName("com.google.firebase.FirebaseApp");
-                firebaseAppClass.getMethod("initializeApp", Context.class).invoke(null, App.this);
-                
                 boolean enableCrashAnalytics = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("enable_crash_analytics", false);
-                
-                Class<?> firebaseAnalyticsClass = Class.forName("com.google.firebase.analytics.FirebaseAnalytics");
-                Object analyticsInstance = firebaseAnalyticsClass.getMethod("getInstance", Context.class).invoke(null, App.this);
-                firebaseAnalyticsClass.getMethod("setAnalyticsCollectionEnabled", boolean.class).invoke(analyticsInstance, enableCrashAnalytics);
-                
-                Class<?> firebaseCrashlyticsClass = Class.forName("com.google.firebase.crashlytics.FirebaseCrashlytics");
-                Object crashlyticsInstance = firebaseCrashlyticsClass.getMethod("getInstance").invoke(null);
-                firebaseCrashlyticsClass.getMethod("setCrashlyticsCollectionEnabled", boolean.class).invoke(crashlyticsInstance, enableCrashAnalytics);
+                if (enableCrashAnalytics) {
+                    Class<?> firebaseAppClass = Class.forName("com.google.firebase.FirebaseApp");
+                    firebaseAppClass.getMethod("initializeApp", Context.class).invoke(null, App.this);
+                    
+                    Class<?> firebaseAnalyticsClass = Class.forName("com.google.firebase.analytics.FirebaseAnalytics");
+                    Object analyticsInstance = firebaseAnalyticsClass.getMethod("getInstance", Context.class).invoke(null, App.this);
+                    firebaseAnalyticsClass.getMethod("setAnalyticsCollectionEnabled", boolean.class).invoke(analyticsInstance, true);
+                    
+                    Class<?> firebaseCrashlyticsClass = Class.forName("com.google.firebase.crashlytics.FirebaseCrashlytics");
+                    Object crashlyticsInstance = firebaseCrashlyticsClass.getMethod("getInstance").invoke(null);
+                    firebaseCrashlyticsClass.getMethod("setCrashlyticsCollectionEnabled", boolean.class).invoke(crashlyticsInstance, true);
+                }
             } catch (Throwable ignored) {
             }
 

@@ -228,12 +228,20 @@ public class FeatureCatalog {
                                 Arrays.asList("restart", "reboot", "button")));
 
                 catalog.add(new SearchableFeature("open_waex",
+                                context.getString(R.string.entry_point_placement_title),
+                                context.getString(R.string.entry_point_placement_sum),
+                                SearchableFeature.Category.GENERAL_HOMESCREEN,
+                                SearchableFeature.FragmentType.GENERAL,
+                                "homescreen",
+                                Arrays.asList("settings", "entry", "point", "placement", "position", "hide", "disable")));
+
+                catalog.add(new SearchableFeature("open_settings_mode",
                                 context.getString(R.string.wa_enhancer_embedded_settings),
                                 context.getString(R.string.wa_enhancer_embedded_settings_sum),
                                 SearchableFeature.Category.GENERAL_HOMESCREEN,
                                 SearchableFeature.FragmentType.GENERAL,
                                 "homescreen",
-                                Arrays.asList("wa enhancer x", "open", "button", "entry", "settings")));
+                                Arrays.asList("wa enhancer x", "open", "button", "entry", "settings", "embed", "embedded", "external")));
 
                 catalog.add(new SearchableFeature("separategroups",
                                 context.getString(R.string.separate_groups),

@@ -155,6 +155,7 @@
         <item>2</item>
     </string-array>
     <string-array name="supported_versions_wpp">
+        <item>2.26.16.xx</item>
         <item>2.26.17.xx</item>
         <item>2.26.18.xx</item>
         <item>2.26.19.xx</item>
@@ -288,6 +289,15 @@
         <item>1</item>
         <item>2</item>
         <item>0</item>
+    </string-array>
+
+    <string-array name="settings_open_mode_entries">
+        <item>@string/open_waex_embedded</item>
+        <item>@string/open_waex_external_app</item>
+    </string-array>
+    <string-array name="settings_open_mode_values">
+        <item>1</item>
+        <item>2</item>
     </string-array>
 
     <string-array name="show_home_menu_entries">

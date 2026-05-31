@@ -49,6 +49,10 @@ public class XPrefManager {
                 Class<?> xPrefsClass = Class.forName("de.robv.android.xposed.XSharedPreferences");
                 if (xPrefsClass.isInstance(pref)) {
                     xPrefsClass.getMethod("reload").invoke(pref);
+                } else {
+                    try {
+                        pref.getClass().getMethod("reload").invoke(pref);
+                    } catch (Throwable ignored) {}
                 }
             } catch (Throwable ignored) {}
         }
@@ -57,6 +61,10 @@ public class XPrefManager {
                 Class<?> xPrefsClass = Class.forName("de.robv.android.xposed.XSharedPreferences");
                 if (xPrefsClass.isInstance(com.waenhancer.xposed.utils.Utils.xprefs)) {
                     xPrefsClass.getMethod("reload").invoke(com.waenhancer.xposed.utils.Utils.xprefs);
+                } else {
+                    try {
+                        com.waenhancer.xposed.utils.Utils.xprefs.getClass().getMethod("reload").invoke(com.waenhancer.xposed.utils.Utils.xprefs);
+                    } catch (Throwable ignored) {}
                 }
             } catch (Throwable ignored) {}
         }
