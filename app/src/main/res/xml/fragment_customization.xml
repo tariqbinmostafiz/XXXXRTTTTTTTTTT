@@ -83,7 +83,7 @@
             app:title="@string/navigation_transparency"
             app:valueSpacing="1" />
 
-        <MultiSelectListPreference
+        <com.waenhancer.preference.HideTabsPreference
             app:entries="@array/tabshide_contents"
             app:entryValues="@array/tabshide_values"
             app:key="hidetabs"

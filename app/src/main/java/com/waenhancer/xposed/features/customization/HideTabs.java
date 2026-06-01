@@ -45,10 +45,25 @@ public class HideTabs extends Feature {
 
         var hidetabs = prefs.getStringSet("hidetabs", null);
         var igstatus = prefs.getBoolean("igstatus", false);
-        if (hidetabs == null || hidetabs.isEmpty())
-            return;
+        var disableMetaAI = prefs.getBoolean("metaai", false);
 
-        var hideTabsList = hidetabs.stream().map(Integer::valueOf).collect(Collectors.toList());
+        List<Integer> hideTabsList;
+        if (hidetabs != null && !hidetabs.isEmpty()) {
+            hideTabsList = hidetabs.stream().map(Integer::valueOf).collect(Collectors.toCollection(ArrayList::new));
+        } else {
+            hideTabsList = new ArrayList<>();
+        }
+
+        if (disableMetaAI && !hideTabsList.contains(1000)) {
+            hideTabsList.add(1000);
+        }
+
+        if (hideTabsList.contains(1000)) {
+            hideTabsList.add(1100);
+        }
+
+        if (hideTabsList.isEmpty())
+            return;
 
         // Keep this hook so we can also remove hidden tabs from the adapter's tab list
         // if the method actually returns an ArrayList (some WA versions).
