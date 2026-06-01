@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.util.Log;
 
 public class TaskerMessageSentReceiver extends BroadcastReceiver {
-    private static final String TAG = "WAE_TaskerReceiver";
+    private static final String TAG = "WAEX_TaskerReceiver";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -37,7 +37,7 @@ public class TaskerMessageSentReceiver extends BroadcastReceiver {
             forwardIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             context.sendBroadcast(forwardIntent);
         } catch (Exception e) {
-            Log.d(TAG, "Failed to forward broadcast to " + packageName + ": " + e.getMessage());
+            Log.e(TAG, "Failed to forward broadcast to " + packageName, e);
         }
     }
 }

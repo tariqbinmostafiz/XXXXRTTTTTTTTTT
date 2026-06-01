@@ -1,7 +1,5 @@
 package com.waenhancer.views;
 
-import static de.robv.android.xposed.XposedBridge.log;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;

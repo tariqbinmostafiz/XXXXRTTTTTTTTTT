@@ -146,7 +146,6 @@ public record WaContactWpp(Object mInstance) {
 
     public static WaContactWpp getWaContactFromJid(FMessageWpp.UserJid userJid) {
         if (mInstanceGetWaContact == null) {
-            XposedBridge.log("WAE: WaContactWpp: mInstanceGetWaContact is NULL. ContactManager not initialized?");
             return null;
         }
         try {
@@ -157,7 +156,6 @@ public record WaContactWpp(Object mInstance) {
 
             // Fallback to phoneJid if userJid lookup failed or userJid was null
             if (contact == null && userJid.phoneJid != null) {
-                XposedBridge.log("WAE: WaContactWpp: userJid lookup failed, trying phoneJid");
                 contact = getWaContactMethod.invoke(mInstanceGetWaContact, userJid.phoneJid);
             }
 

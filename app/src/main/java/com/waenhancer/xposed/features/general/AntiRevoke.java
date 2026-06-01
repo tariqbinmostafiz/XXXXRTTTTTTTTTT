@@ -351,7 +351,7 @@ public class AntiRevoke extends Feature {
                                                 } catch (Exception ignored) {}
                                             }
                                         } catch (Exception e) {
-                                            XposedBridge.log("WAE: Error recording revocation: " + e.getMessage());
+                                            XposedBridge.log("[WAEX] Error recording revocation: " + e.getMessage());
                                         }
                                         
                                         param.setResult(0); // Block the delete
@@ -361,7 +361,7 @@ public class AntiRevoke extends Feature {
                                     cursor.close();
                                 }
                             } catch (Exception e) {
-                                XposedBridge.log("WAE: Error checking message before delete: " + e.getMessage());
+                                XposedBridge.log("[WAEX] Error checking message before delete: " + e.getMessage());
                             }
                         }
                     } catch (Throwable ignored) {}
@@ -393,9 +393,8 @@ public class AntiRevoke extends Feature {
                 }
             });
 
-            XposedBridge.log("WAE: Anti-revoke SQL hooks installed successfully");
-        } catch (Exception e) {
-            XposedBridge.log("WAE: Failed to install anti-revoke SQL hooks: " + e.getMessage());
+         } catch (Exception e) {
+            XposedBridge.log("[WAEX] Failed to install anti-revoke SQL hooks: " + e.getMessage());
         }
     }
 

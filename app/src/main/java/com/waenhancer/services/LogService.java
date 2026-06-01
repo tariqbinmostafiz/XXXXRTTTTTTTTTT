@@ -28,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LogService extends Service {
-    private static final String TAG = "WAE_LogService";
+    private static final String TAG = "WAEX_LogService";
     private static final String CHANNEL_ID = "log_service_channel";
     private static final int NOTIFICATION_ID = 1001;
     public static final String ACTION_STOP = "com.waenhancer.ACTION_STOP_LOGGING";

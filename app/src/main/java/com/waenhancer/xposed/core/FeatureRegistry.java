@@ -85,7 +85,6 @@ public class FeatureRegistry {
                                             TriggerType triggerType, String triggerAction, boolean showInSettings) {
         lazyFeatures.put(featureClass.getSimpleName(),
                 new LazyFeatureRegistration(featureName, featureClass, triggerType, triggerAction, showInSettings));
-        XposedBridge.log("[FeatureRegistry] Registered lazy feature: " + featureName + " (trigger: " + triggerType + ")");
     }
 
     /**
@@ -170,9 +169,6 @@ public class FeatureRegistry {
                 feature.doHook();
 
                 loadedFeatures.add(key);
-                long loadTime = System.currentTimeMillis() - startTime;
-                XposedBridge.log("[FeatureRegistry] Lazy loaded: " + reg.featureName + " in " + loadTime + "ms");
-
             } catch (Throwable e) {
                 XposedBridge.log("[FeatureRegistry] Failed to lazy load " + reg.featureName + ": " + e.getMessage());
             }

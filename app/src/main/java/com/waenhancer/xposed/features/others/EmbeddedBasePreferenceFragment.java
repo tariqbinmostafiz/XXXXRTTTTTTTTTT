@@ -116,6 +116,11 @@ public abstract class EmbeddedBasePreferenceFragment extends PreferenceFragmentC
                 }
                 return super.getSystemService(name);
             }
+
+            @Override
+            public ClassLoader getClassLoader() {
+                return EmbeddedBasePreferenceFragment.class.getClassLoader();
+            }
         };
     }
 
@@ -419,13 +424,8 @@ public abstract class EmbeddedBasePreferenceFragment extends PreferenceFragmentC
 
         Preference separateGroupsPreference = findPreference("separategroups");
         if (separateGroupsPreference != null) {
-            if (com.waenhancer.BuildConfig.DEBUG) {
-                separateGroupsPreference.setEnabled(true);
-                separateGroupsPreference.setSummary(getString(R.string.separate_groups_sum));
-            } else {
-                setPreferenceState("separategroups", false);
-                separateGroupsPreference.setSummary("Under development and will launch soon.");
-            }
+            separateGroupsPreference.setEnabled(true);
+            separateGroupsPreference.setSummary(getString(R.string.separate_groups_sum));
         }
 
         Preference callBlockContacts = findPreference("call_block_contacts");

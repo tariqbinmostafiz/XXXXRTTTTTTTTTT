@@ -65,8 +65,8 @@ public class LiteMode extends Feature {
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 var activity = (Activity) param.thisObject;
 
-                var wae = WppCore.getPrivString("download_folder", null);
-                if (wae == null || !isUriPermissionGranted(activity, Uri.parse(wae))) {
+                var waex = WppCore.getPrivString("download_folder", null);
+                if (waex == null || !isUriPermissionGranted(activity, Uri.parse(waex))) {
                     showDialogUriPermission(activity);
                 }
             }
@@ -95,7 +95,7 @@ public class LiteMode extends Feature {
     }
 
     private void InsertDownloadFolderButton(Menu menu, Activity activity) {
-        var entryPoint = getSafeString("open_wae", "1");
+        var entryPoint = getSafeString("open_waex", "1");
         if (!"1".equals(entryPoint)) return;
         int MENU_ID_DOWNLOAD_FOLDER = 0x7EAE0006;
         if (menu.findItem(MENU_ID_DOWNLOAD_FOLDER) != null) return;

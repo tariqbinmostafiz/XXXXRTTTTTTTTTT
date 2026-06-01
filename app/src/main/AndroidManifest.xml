@@ -34,10 +34,10 @@
         tools:ignore="ScopedStorage" />
 
 
-    <queries>
-        <package android:name="com.whatsapp" />
-        <package android:name="com.whatsapp.w4b" />
-    </queries>
+<!--    <queries>-->
+<!--        <package android:name="com.whatsapp" />-->
+<!--        <package android:name="com.whatsapp.w4b" />-->
+<!--    </queries>-->
 
     <application
         android:forceQueryable="true"
@@ -211,6 +211,12 @@
             android:name=".ui.fragments.SupportedVersionsActivity"
             android:theme="@style/AppTheme"
             android:exported="true"
+            android:parentActivityName=".activities.MainActivity" />
+
+        <activity
+            android:name=".activities.LicenseActivity"
+            android:theme="@style/AppTheme"
+            android:exported="false"
             android:parentActivityName=".activities.MainActivity" />
 
         <activity

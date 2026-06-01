@@ -66,7 +66,6 @@ public class ScopeHook {
                                 XposedHelpers.callStaticMethod(Binder.class, "defaultBlockingForCurrentThread");
                             } catch (Throwable ignored) {
                             }
-                            XposedBridge.log("WaEnhancer X: Bypass Scope using Provider Settings");
                         }
                     }
                 } catch (Throwable ex) {

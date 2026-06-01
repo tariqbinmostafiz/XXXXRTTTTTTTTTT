@@ -1,9 +1,3 @@
-[Improvements]
-- Restored Separate Groups feature
-- Improved Module Entry tile in Settings Activity for all Languages
-- Improved Call info notification
-
-
 [Fixes]
-- Fixed crash on startup
-- Fixed crash on status custom text color
+- Fixed MessageBomber, DeleteMessageFile plugin errors
+- Fixed Fragments crash on open (General, Home Screen, Conversation Screen)

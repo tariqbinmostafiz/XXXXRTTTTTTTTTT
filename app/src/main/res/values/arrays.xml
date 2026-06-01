@@ -155,25 +155,21 @@
         <item>2</item>
     </string-array>
     <string-array name="supported_versions_wpp">
-        <item>2.26.13.xx</item>
-        <item>2.26.14.xx</item>
-        <item>2.26.15.xx</item>
         <item>2.26.16.xx</item>
         <item>2.26.17.xx</item>
         <item>2.26.18.xx</item>
         <item>2.26.19.xx</item>
         <item>2.26.20.xx</item>
+        <item>2.26.21.xx</item>
     </string-array>
 
     <string-array name="supported_versions_business">
-        <item>2.26.13.xx</item>
-        <item>2.26.14.xx</item>
-        <item>2.26.15.xx</item>
         <item>2.26.16.xx</item>
         <item>2.26.17.xx</item>
         <item>2.26.18.xx</item>
         <item>2.26.19.xx</item>
         <item>2.26.20.xx</item>
+        <item>2.26.21.xx</item>
     </string-array>
 
     <string-array name="image_picker">
@@ -293,6 +289,15 @@
         <item>1</item>
         <item>2</item>
         <item>0</item>
+    </string-array>
+
+    <string-array name="settings_open_mode_entries">
+        <item>@string/open_waex_embedded</item>
+        <item>@string/open_waex_external_app</item>
+    </string-array>
+    <string-array name="settings_open_mode_values">
+        <item>1</item>
+        <item>2</item>
     </string-array>
 
     <string-array name="show_home_menu_entries">

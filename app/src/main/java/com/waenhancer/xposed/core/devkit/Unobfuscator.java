@@ -192,7 +192,7 @@ public class Unobfuscator {
                     .firstOrNull();
             if (result == null) {
                 if (name.contains("PhoneUserJid")) {
-                    XposedBridge.log("WAE: PhoneUserJid class not found. Falling back to UserJid class.");
+                    XposedBridge.log("[WAEX] PhoneUserJid class not found. Falling back to UserJid class.");
                     String fallbackName = name.replace("PhoneUserJid", "UserJid");
                     var fallbackResult = dexkit.findClass(FindClass.create().matcher(ClassMatcher.create().className(fallbackName, type)))
                             .firstOrNull();

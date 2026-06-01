@@ -122,10 +122,6 @@ public class WppXposed implements IXposedHookLoadPackage, IXposedHookInitPackage
                 } catch (Throwable t) {
                     XposedBridge.log("[WAEX] Logging hook setup failed: " + t.getMessage());
                 }
-            } else {
-                if (Utils.DEBUG) {
-                    XposedBridge.log("[WAEX] Logging hooks skipped (logging_enabled=false)");
-                }
             }
 
             try {
@@ -287,9 +283,6 @@ public class WppXposed implements IXposedHookLoadPackage, IXposedHookInitPackage
                     } catch (Exception ignored) {}
                 }
             }
-            if (Utils.DEBUG) {
-                XposedBridge.log("[WAEX] Valid module IDs populated: " + XResManager.validModuleIds.size());
-            }
         } catch (Throwable t) {
             XposedBridge.log("[WAEX] Error populating valid IDs: " + t.getMessage());
         }
@@ -327,9 +320,6 @@ public class WppXposed implements IXposedHookLoadPackage, IXposedHookInitPackage
                         }
                     } catch (Exception ignored) {}
                 }
-            }
-            if (Utils.DEBUG) {
-                XposedBridge.log("[WAEX] Resource mapping complete. Total mapped: " + count);
             }
         } catch (Throwable t) {
             XposedBridge.log("[WAEX] Resource mapping error: " + t.getMessage());

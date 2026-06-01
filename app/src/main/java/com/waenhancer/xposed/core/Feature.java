@@ -33,42 +33,19 @@ public abstract class Feature {
     public abstract String getPluginName();
 
     public void logDebug(Object object) {
-        if (!DEBUG) return;
-        log(object);
-        if (object instanceof Throwable) {
-            Throwable th = (Throwable) object;
-            Log.i("WAE", this.getPluginName() + "-> " + th.getMessage(), th);
-        } else {
-            ;
-        }
     }
 
     public void logDebug(String title, Object object) {
-        if (!DEBUG) return;
-        log(title + ": " + object);
-        if (object instanceof Throwable) {
-            Throwable th = (Throwable) object;
-            Log.i("WAE", this.getPluginName() + "-> " + title + ": " + th.getMessage(), th);
-        } else {
-            ;
-        }
     }
 
 
     public void log(Object object) {
-        if (!DEBUG) return;
-        if (object instanceof Throwable) {
-            XposedBridge.log(String.format("[%s] Error:", this.getPluginName()));
-            ;
-        } else {
-            ;
-        }
     }
 
     public void logError(Object object) {
         if (object instanceof Throwable) {
             XposedBridge.log(String.format("[%s] CRITICAL ERROR:", this.getPluginName()));
-            ;
+            XposedBridge.log((Throwable) object);
         } else {
             XposedBridge.log(String.format("[%s] CRITICAL ERROR: %s", this.getPluginName(), object));
         }

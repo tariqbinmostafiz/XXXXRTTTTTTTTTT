@@ -30,6 +30,11 @@ public class HideTabs extends Feature {
      * bottom-nav menu. The index here == ViewPager child position.
      */
     private final ArrayList<Integer> originalTabs = new ArrayList<>();
+    
+    /**
+     * The actual active tab IDs in the adapter after filtering out hidden ones.
+     */
+    private final ArrayList<Integer> activeTabs = new ArrayList<>();
 
     public HideTabs(@NonNull ClassLoader loader, @NonNull SharedPreferences preferences) {
         super(loader, preferences);
@@ -67,6 +72,10 @@ public class HideTabs extends Feature {
                         if (item != STATUS_TAB_ID || !igstatus) {
                             tabs.remove(item);
                         }
+                    }
+                    synchronized (activeTabs) {
+                        activeTabs.clear();
+                        activeTabs.addAll(tabs);
                     }
                 }
             }
@@ -136,8 +145,6 @@ public class HideTabs extends Feature {
                 } catch (Exception e) {
                     XposedBridge.log("HideTabs: failed to get TabsPager instance: " + e);
                 }
-                XposedBridge.log("HideTabs: after HomeActivity.onCreate: originalTabs=" + originalTabs
-                        + " mTabPager=" + (mTabPagerInstance != null));
                 PerfLogger.end("HideTabs.homeOnCreate", perfStart, 1);
             }
         });
@@ -153,9 +160,6 @@ public class HideTabs extends Feature {
                     var index = (int) param.args[0];
                     var idxAtual = (int) XposedHelpers.callMethod(param.thisObject, "getCurrentItem");
                     int newIndex = getNewTabIndex(hideTabsList, idxAtual, index);
-                    if (newIndex != index) {
-                        XposedBridge.log("HideTabs: scroll redirect " + index + " -> " + newIndex);
-                    }
                     param.args[0] = newIndex;
                 }
                 PerfLogger.end("HideTabs.onMenuItemSelected", perfStart, 1);
@@ -172,17 +176,10 @@ public class HideTabs extends Feature {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                         if (param.thisObject != mTabPagerInstance) return;
-                        ArrayList<Integer> origSnapshot;
-                        synchronized (originalTabs) {
-                            origSnapshot = new ArrayList<>(originalTabs);
-                        }
-                        if (origSnapshot.isEmpty()) return;
-                        for (var item : hideTabsList) {
-                            var index = origSnapshot.indexOf(item);
-                            if (index == -1) continue;
-                            if ((int) param.args[1] == index) {
-                                ((View) param.args[0]).setVisibility(View.GONE);
-                            }
+                        int index = (int) param.args[1];
+                        int tabId = getTabIdAt(index);
+                        if (tabId != -1 && hideTabsList.contains(tabId)) {
+                            ((View) param.args[0]).setVisibility(View.GONE);
                         }
                     }
                 });
@@ -213,5 +210,22 @@ public class HideTabs extends Feature {
         if (newIndex < 0) return 0;
         if (newIndex >= tabsSnapshot.size()) return indexAtual;
         return getNewTabIndex(hidetabs, indexAtual, newIndex);
+    }
+
+    private int getTabIdAt(int index) {
+        synchronized (activeTabs) {
+            if (!activeTabs.isEmpty()) {
+                if (index >= 0 && index < activeTabs.size()) {
+                    return activeTabs.get(index);
+                }
+                return -1;
+            }
+        }
+        synchronized (originalTabs) {
+            if (index >= 0 && index < originalTabs.size()) {
+                return originalTabs.get(index);
+            }
+        }
+        return -1;
     }
 }

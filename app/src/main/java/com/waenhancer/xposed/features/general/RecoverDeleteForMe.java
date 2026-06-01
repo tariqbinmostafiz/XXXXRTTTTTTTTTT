@@ -72,18 +72,17 @@ public class RecoverDeleteForMe extends Feature {
                             try {
                                 saveOne(ctx, msg);
                             } catch (Throwable t) {
-                                XposedBridge.log("WAE: RecoverDeleteForMe saveOne: " + t.getMessage());
+                                XposedBridge.log("[WAEX] RecoverDeleteForMe saveOne: " + t.getMessage());
                             }
                         }
                     } catch (Throwable t) {
-                        XposedBridge.log("WAE: RecoverDeleteForMe hook: " + t.getMessage());
+                        XposedBridge.log("[WAEX] RecoverDeleteForMe hook: " + t.getMessage());
                     }
                 }
             });
-            XposedBridge.log("WAE: RecoverDeleteForMe hooked A06 OK");
 
         } catch (Exception e) {
-            XposedBridge.log("WAE: RecoverDeleteForMe init: " + e.getMessage());
+            XposedBridge.log("[WAEX] RecoverDeleteForMe init: " + e.getMessage());
         }
     }
 
@@ -219,7 +218,7 @@ public class RecoverDeleteForMe extends Feature {
                         ;
                     }
                 } catch (Throwable t) {
-                    XposedBridge.log("WAE: WaContactWpp lookup failed: " + t.getMessage());
+                    XposedBridge.log("[WAEX] WaContactWpp lookup failed: " + t.getMessage());
                 }
             }
 
@@ -228,7 +227,7 @@ public class RecoverDeleteForMe extends Feature {
                 contactName = getContactName(context, chatJid);
             }
         } catch (Throwable t) {
-            XposedBridge.log("WAE: Error in contact resolution: " + t.getMessage());
+            XposedBridge.log("[WAEX] Error in contact resolution: " + t.getMessage());
         }
 
         // Capture Package Name
@@ -270,7 +269,7 @@ public class RecoverDeleteForMe extends Feature {
                 }
             }
         } catch (Exception e) {
-            XposedBridge.log("WAE: Error extracting original timestamp: " + e.getMessage());
+            XposedBridge.log("[WAEX] Error extracting original timestamp: " + e.getMessage());
         }
 
         // Create and Save
@@ -328,7 +327,7 @@ public class RecoverDeleteForMe extends Feature {
             context.getContentResolver().insert(uri, values);
             ;
         } catch (Exception e) {
-            XposedBridge.log("WAE: Failed to insert to provider: " + e.getMessage());
+            XposedBridge.log("[WAEX] Failed to insert to provider: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -442,7 +441,7 @@ public class RecoverDeleteForMe extends Feature {
                         .makeText(context, "Media restore not supported yet", android.widget.Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            XposedBridge.log("WAE: Restore failed: " + e.getMessage());
+            XposedBridge.log("[WAEX] Restore failed: " + e.getMessage());
         }
     }
 }

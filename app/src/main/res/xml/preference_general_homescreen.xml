@@ -44,7 +44,15 @@
             app:defaultValue="1"
             app:entries="@array/wa_enhancer_entry_point_entries"
             app:entryValues="@array/wa_enhancer_entry_point_values"
-            app:key="open_wae"
+            app:key="open_waex"
+            app:summary="%s"
+            app:title="@string/entry_point_placement_title" />
+
+        <ListPreference
+            app:defaultValue="1"
+            app:entries="@array/settings_open_mode_entries"
+            app:entryValues="@array/settings_open_mode_values"
+            app:key="open_settings_mode"
             app:summary="%s"
             app:title="@string/wa_enhancer_embedded_settings" />
 

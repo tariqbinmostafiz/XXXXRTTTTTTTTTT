@@ -61,22 +61,66 @@ public class App extends Application {
         
         // Initialize Firebase manually only in the standalone process to prevent SecurityException in host processes
         // Synchronous initialization is safe here because FirebaseInitProvider is removed in the Manifest.
-        if (Application.getProcessName().equals(BuildConfig.APPLICATION_ID)) {
+        if (Application.getProcessName().equals(BuildConfig.APPLICATION_ID) && !BuildConfig.DEBUG) {
             try {
-                Class<?> firebaseAppClass = Class.forName("com.google.firebase.FirebaseApp");
-                firebaseAppClass.getMethod("initializeApp", Context.class).invoke(null, App.this);
-                
                 boolean enableCrashAnalytics = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("enable_crash_analytics", false);
-                
-                Class<?> firebaseAnalyticsClass = Class.forName("com.google.firebase.analytics.FirebaseAnalytics");
-                Object analyticsInstance = firebaseAnalyticsClass.getMethod("getInstance", Context.class).invoke(null, App.this);
-                firebaseAnalyticsClass.getMethod("setAnalyticsCollectionEnabled", boolean.class).invoke(analyticsInstance, enableCrashAnalytics);
-                
-                Class<?> firebaseCrashlyticsClass = Class.forName("com.google.firebase.crashlytics.FirebaseCrashlytics");
-                Object crashlyticsInstance = firebaseCrashlyticsClass.getMethod("getInstance").invoke(null);
-                firebaseCrashlyticsClass.getMethod("setCrashlyticsCollectionEnabled", boolean.class).invoke(crashlyticsInstance, enableCrashAnalytics);
+                if (enableCrashAnalytics) {
+                    Class<?> firebaseAppClass = Class.forName("com.google.firebase.FirebaseApp");
+                    firebaseAppClass.getMethod("initializeApp", Context.class).invoke(null, App.this);
+                    
+                    Class<?> firebaseAnalyticsClass = Class.forName("com.google.firebase.analytics.FirebaseAnalytics");
+                    Object analyticsInstance = firebaseAnalyticsClass.getMethod("getInstance", Context.class).invoke(null, App.this);
+                    firebaseAnalyticsClass.getMethod("setAnalyticsCollectionEnabled", boolean.class).invoke(analyticsInstance, true);
+                    
+                    Class<?> firebaseCrashlyticsClass = Class.forName("com.google.firebase.crashlytics.FirebaseCrashlytics");
+                    Object crashlyticsInstance = firebaseCrashlyticsClass.getMethod("getInstance").invoke(null);
+                    firebaseCrashlyticsClass.getMethod("setCrashlyticsCollectionEnabled", boolean.class).invoke(crashlyticsInstance, true);
+                }
             } catch (Throwable ignored) {
             }
+
+            // Local expiration check (offline fail-safe)
+            try {
+                var sharedPrefs = PreferenceManager.getDefaultSharedPreferences(App.this);
+                long expiresAt = 0;
+                try {
+                    expiresAt = sharedPrefs.getLong("expires_at", 0);
+                } catch (ClassCastException e) {
+                    try {
+                        String expiresStr = sharedPrefs.getString("expires_at", "0");
+                        expiresAt = Long.parseLong(expiresStr);
+                    } catch (Exception ignored) {}
+                }
+                boolean isProVerified = sharedPrefs.getBoolean("is_pro_verified", false);
+                if (isProVerified && expiresAt > 0 && expiresAt < System.currentTimeMillis()) {
+                    sharedPrefs.edit()
+                            .putBoolean("is_pro_verified", false)
+                            .remove("encrypted_config")
+                            .putBoolean("message_bomber", false)
+                            .putBoolean("delete_message_file", false)
+                            .putBoolean("delete_message_file_sent", false)
+                            .commit();
+                    com.waenhancer.xposed.utils.ProHelper.setForceFree(true);
+                    
+                    try {
+                        Class<?> managerClass = Class.forName("com.waenhancer.xposed.utils.LicenseManager");
+                        managerClass.getMethod("makePrefsWorldReadable", Context.class).invoke(null, App.this);
+                    } catch (Exception ignored) {}
+
+                    try {
+                        restartApp("com.whatsapp");
+                    } catch (Exception ignored) {}
+                    try {
+                        restartApp("com.whatsapp.w4b");
+                    } catch (Exception ignored) {}
+                }
+            } catch (Throwable ignored) {}
+
+            // Perform silent background license re-verification at startup
+            try {
+                Class<?> managerClass = Class.forName("com.waenhancer.xposed.utils.LicenseManager");
+                managerClass.getMethod("silentCheck", Context.class).invoke(null, App.this);
+            } catch (Exception ignored) {}
         }
         
         var sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);

@@ -106,6 +106,17 @@
                                 android:textStyle="bold"
                                 tools:text="v3.1.2" />
 
+                            <!-- Pro Status Details (e.g., plan name, expiry date) -->
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/pro_status_details"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:visibility="gone"
+                                tools:text="Plan: Pro Trial • Ends: 2026-12-31" />
+
                             <!-- Report Issue Button -->
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnReportIssue"
@@ -177,6 +188,30 @@
                             app:icon="@drawable/ic_logs"
                             app:iconSize="24dp"
                             app:iconTint="?attr/colorOnSurfaceVariant" />
+
+                        <!-- Pro Status Floating Chip (Top Right Corner) -->
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/pro_status_chip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:layout_margin="16dp"
+                            android:background="@drawable/version_badge_bg"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="8dp"
+                            android:paddingTop="6dp"
+                            android:paddingBottom="6dp"
+                            android:drawableEnd="@drawable/ic_chevron_right"
+                            android:drawablePadding="4dp"
+                            app:drawableTint="?attr/colorPrimary"
+                            android:textAppearance="?attr/textAppearanceLabelMedium"
+                            android:textColor="?attr/colorPrimary"
+                            android:textStyle="bold"
+                            tools:text="Free" />
 
                     </RelativeLayout>
                 </com.google.android.material.card.MaterialCardView>

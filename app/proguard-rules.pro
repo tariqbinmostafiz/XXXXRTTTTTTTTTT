@@ -24,10 +24,58 @@
 
 -dontwarn *
 
-# Keep our entire module code
--keep class com.waenhancer.** {
-     *;
+# Keep the critical Xposed loading entry point and all its members
+-keep class com.waenhancer.WppXposed { *; }
+
+# ── Pro module: aggressive obfuscation ───────────────────────────────────────
+# Keep only what is strictly needed for reflection (Class.forName + constructor)
+# and JNI (native method signatures must match the C++ side).
+# Everything else in the pro package gets fully obfuscated.
+-keep class com.waenhancer.pro.ProFeature {
+    public <init>(java.lang.ClassLoader, android.content.SharedPreferences);
+    native <methods>;
+    protected void setupNativeHooks(java.lang.String[]);
 }
+
+-keepclassmembers class * extends com.waenhancer.pro.ProFeature {
+    protected void setupNativeHooks(java.lang.String[]);
+}
+
+# Keep Native Security Bridge
+-keepclasseswithmembernames class com.waenhancer.pro.utils.SecurityNative {
+    native <methods>;
+}
+-keep class com.waenhancer.pro.utils.SecurityNative { *; }
+
+# Keep Network and Crypto classes
+-keep class com.waenhancer.xposed.utils.KeystoreHelper { *; }
+-keep class com.waenhancer.xposed.utils.LicenseManager { *; }
+-keep class com.waenhancer.pro.utils.ProStatusManager { *; }
+-keep class com.waenhancer.pro.utils.ProConfig { *; }
+
+# Keep the reflective constructors for all Feature plugins loaded dynamically at startup or lazily
+-keep class * extends com.waenhancer.xposed.core.Feature {
+    public <init>(java.lang.ClassLoader, android.content.SharedPreferences);
+}
+
+# Keep critical cross-app target Activities called via ComponentName string from WhatsApp process context
+-keep class com.waenhancer.activities.ChangelogActivity { *; }
+-keep class com.waenhancer.xposed.features.others.EmbeddedSettingsActivity { *; }
+
+# Keep all IPC bridge AIDL interface, stub, and client classes intact to maintain communication stability
+-keep class com.waenhancer.xposed.bridge.** { *; }
+
+# Strip all debug info from pro classes — no source file, no line numbers
+-assumenosideeffects class com.waenhancer.pro.** {
+    void log(...);
+}
+
+# Obfuscate the dictionary for pro classes — use single-char names
+-repackageclasses ''
+-allowaccessmodification
+-overloadaggressively
+
+-renamesourcefileattribute ""
 
 # Keep AndroidX libraries that are often accessed via reflection in Xposed environments
 -keep class androidx.preference.** { *; }
@@ -39,6 +87,12 @@
 -keep class io.luckypray.dexkit.** { *; }
 -keep class org.luckypray.dexkit.** { *; }
 -keep class com.waenhancer.xposed.utils.ResId** { *; }
+
+# Keep all custom preference classes since they are inflated via reflection from XML
+-keep class com.waenhancer.preference.** { *; }
+
+# Keep Unobfuscator and UnobfuscatorCache to prevent obfuscation, class merging, and method inlining
+-keep class com.waenhancer.xposed.core.devkit.** { *; }
 
 # Keep Firebase classes accessed via reflection
 -keep class com.google.firebase.** { *; }
@@ -69,3 +123,8 @@
 -keep class okio.** { *; }
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# Keep all UI fragments and enclosing classes to prevent reflection/XML lookup failures
+-keep class com.waenhancer.ui.fragments.** { *; }
+-keep class com.waenhancer.xposed.features.others.** { *; }
+-keep class * extends androidx.fragment.app.Fragment { *; }

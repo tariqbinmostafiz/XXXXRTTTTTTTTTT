@@ -54,10 +54,7 @@ public class UpdateChecker implements Runnable {
     }
 
     private static void writeDebugLog(String message) {
-        if (!Utils.DEBUG) return;
-        try {
-            XposedBridge.log("[WAE_UpdateChecker] " + message);
-        } catch (Exception ignored) {}
+        // Trace logs disabled
     }
 
     public UpdateChecker(Activity activity) {

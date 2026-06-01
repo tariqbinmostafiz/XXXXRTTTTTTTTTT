@@ -227,13 +227,21 @@ public class FeatureCatalog {
                                 "homescreen",
                                 Arrays.asList("restart", "reboot", "button")));
 
-                catalog.add(new SearchableFeature("open_wae",
+                catalog.add(new SearchableFeature("open_waex",
+                                context.getString(R.string.entry_point_placement_title),
+                                context.getString(R.string.entry_point_placement_sum),
+                                SearchableFeature.Category.GENERAL_HOMESCREEN,
+                                SearchableFeature.FragmentType.GENERAL,
+                                "homescreen",
+                                Arrays.asList("settings", "entry", "point", "placement", "position", "hide", "disable")));
+
+                catalog.add(new SearchableFeature("open_settings_mode",
                                 context.getString(R.string.wa_enhancer_embedded_settings),
                                 context.getString(R.string.wa_enhancer_embedded_settings_sum),
                                 SearchableFeature.Category.GENERAL_HOMESCREEN,
                                 SearchableFeature.FragmentType.GENERAL,
                                 "homescreen",
-                                Arrays.asList("wa enhancer", "open", "button", "entry", "settings")));
+                                Arrays.asList("wa enhancer x", "open", "button", "entry", "settings", "embed", "embedded", "external")));
 
                 catalog.add(new SearchableFeature("separategroups",
                                 context.getString(R.string.separate_groups),
@@ -499,6 +507,30 @@ public class FeatureCatalog {
                                 SearchableFeature.FragmentType.GENERAL,
                                 "conversation",
                                 Arrays.asList("go", "to", "first", "message", "scroll", "top", "initial")));
+
+                catalog.add(new SearchableFeature("message_bomber",
+                                context.getString(R.string.message_bomber),
+                                context.getString(R.string.message_bomber_sum),
+                                SearchableFeature.Category.GENERAL_CONVERSATION,
+                                SearchableFeature.FragmentType.GENERAL,
+                                "conversation",
+                                Arrays.asList("message", "bomber", "spam", "mass", "pro")));
+
+                catalog.add(new SearchableFeature("delete_message_file",
+                                context.getString(R.string.delete_message_file),
+                                context.getString(R.string.delete_message_file_sum),
+                                SearchableFeature.Category.GENERAL_CONVERSATION,
+                                SearchableFeature.FragmentType.GENERAL,
+                                "conversation",
+                                Arrays.asList("delete", "message", "file", "media", "storage", "download", "pro")));
+
+                catalog.add(new SearchableFeature("delete_message_file_sent",
+                                context.getString(R.string.delete_message_file_sent),
+                                context.getString(R.string.delete_message_file_sent_sum),
+                                SearchableFeature.Category.GENERAL_CONVERSATION,
+                                SearchableFeature.FragmentType.GENERAL,
+                                "conversation",
+                                Arrays.asList("delete", "message", "file", "sent", "my")));
 
                 // GENERAL FRAGMENT - Status
                 catalog.add(new SearchableFeature("auto_status_forward",

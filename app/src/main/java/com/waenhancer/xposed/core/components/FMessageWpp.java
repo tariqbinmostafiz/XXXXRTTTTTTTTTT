@@ -36,6 +36,7 @@ public class FMessageWpp {
     private static Method getOriginalMessageKey;
     private static Class abstractMediaMessageClass;
     private static Field broadcastField;
+    private static Field timestampField;
     private static Field keyIdField;
     private static Field keyFromMeField;
     private static Field keyRemoteJidField;
@@ -72,6 +73,11 @@ public class FMessageWpp {
             abstractMediaMessageClass = Unobfuscator.loadAbstractMediaMessageClass(classLoader);
             broadcastField = Unobfuscator.loadBroadcastTagField(classLoader);
             getFieldIdMessage = Unobfuscator.loadSetEditMessageField(classLoader);
+            try {
+                timestampField = Unobfuscator.loadFmessageTimestampField(classLoader);
+            } catch (Exception e) {
+                XposedBridge.log("[WAEX] Could not load timestampField: " + e.getMessage());
+            }
 
             // Initialize Key fields dynamically
             if (Key.TYPE != null) {
@@ -123,6 +129,16 @@ public class FMessageWpp {
         return 0;
     }
 
+    public long getTimestamp() {
+        try {
+            if (timestampField != null) {
+                return timestampField.getLong(fmessage);
+            }
+        } catch (Exception e) {
+            XposedBridge.log(e);
+        }
+        return 0;
+    }
 
     public Key getKey() {
         try {
@@ -381,6 +397,32 @@ public class FMessageWpp {
             }
         }
         tryAppend(sb, label, methodsSb);
+    }
+
+    public void clearCache() {
+        try {
+            if (!isMediaFile() || abstractMediaMessageClass == null) return;
+            for (var field : abstractMediaMessageClass.getDeclaredFields()) {
+                if (field.getType().isPrimitive()) continue;
+                var fileField = ReflectionUtils.getFieldByType(field.getType(), File.class);
+                if (fileField != null) {
+                    var mediaObject = ReflectionUtils.getObjectField(field, fmessage);
+                    if (mediaObject == null) continue;
+                    fileField.setAccessible(true);
+                    fileField.set(mediaObject, null);
+                    
+                    // Reset boolean fields in the mediaObject (like transferred, etc.)
+                    for (Field f : mediaObject.getClass().getDeclaredFields()) {
+                        if (f.getType() == boolean.class) {
+                            f.setAccessible(true);
+                            f.setBoolean(mediaObject, false);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            XposedBridge.log("[WAEX] Error clearing FMessageWpp cache: " + t.getMessage());
+        }
     }
 
     /*

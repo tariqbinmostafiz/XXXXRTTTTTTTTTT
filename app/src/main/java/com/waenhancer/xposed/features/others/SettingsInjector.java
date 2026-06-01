@@ -33,9 +33,9 @@ import de.robv.android.xposed.XposedHelpers;
  */
 public class SettingsInjector extends Feature {
     private static final String SETTINGS_TAB_ACTIVITY = "com.whatsapp.settings.ui.SettingsTabActivity";
-    private static final int VIEW_ID_WAE_SETTINGS = 10001;
+    private static final int VIEW_ID_WAEX_SETTINGS = 10001;
     private final Set<Integer> processedActivities = new HashSet<>();
-    private static final int MENU_ID_WAE_SETTINGS = 9999;
+    private static final int MENU_ID_WAEX_SETTINGS = 9999;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public SettingsInjector(@NonNull ClassLoader classLoader, @NonNull SharedPreferences preferences) {
@@ -58,7 +58,7 @@ public class SettingsInjector extends Feature {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 Activity activity = (Activity) param.thisObject;
-                String entryPoint = getSafeString("open_wae", "1");
+                String entryPoint = getSafeString("open_waex", "1");
                 if ("0".equals(entryPoint) || "2".equals(entryPoint)) return;
                 Menu menu = (Menu) param.args[0];
                 injectToolbarMenu(menu, activity);
@@ -71,7 +71,7 @@ public class SettingsInjector extends Feature {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 Activity activity = (Activity) param.thisObject;
-                String entryPoint = getSafeString("open_wae", "1");
+                String entryPoint = getSafeString("open_waex", "1");
 
                 // Clean up elements that shouldn't be present in the current mode
                 if (!"2".equals(entryPoint)) {
@@ -140,7 +140,7 @@ public class SettingsInjector extends Feature {
                 if (anchorRow != null) {
                     View customRow = createDynamicSettingRow(activity, anchorRow);
                     if (customRow != null) {
-                        customRow.setId(VIEW_ID_WAE_SETTINGS);
+                        customRow.setId(VIEW_ID_WAEX_SETTINGS);
                         listContainer.addView(customRow, insertionIndex);
                         return; // Success
                     }
@@ -163,7 +163,7 @@ public class SettingsInjector extends Feature {
                         int index = container.indexOfChild(row);
                         View customRow = createDynamicSettingRow(activity, row);
                         if (customRow != null) {
-                            customRow.setId(VIEW_ID_WAE_SETTINGS);
+                            customRow.setId(VIEW_ID_WAEX_SETTINGS);
                             container.addView(customRow, index + 1);
                         }
                     }
@@ -203,7 +203,7 @@ public class SettingsInjector extends Feature {
                 int index = commonAncestor.indexOfChild(accountRow);
                 View customRow = createDynamicSettingRow(activity, accountRow);
                 if (customRow != null) {
-                    customRow.setId(VIEW_ID_WAE_SETTINGS);
+                    customRow.setId(VIEW_ID_WAEX_SETTINGS);
                     commonAncestor.addView(customRow, index + 1);
                 }
             }
@@ -464,9 +464,9 @@ public class SettingsInjector extends Feature {
 
             ViewGroup toolbar = findToolbar(root);
             if (toolbar != null) {
-                if (toolbar.findViewById(VIEW_ID_WAE_SETTINGS) != null) return;
+                if (toolbar.findViewById(VIEW_ID_WAEX_SETTINGS) != null) return;
                 ImageView button = createSettingsButton(activity);
-                button.setId(VIEW_ID_WAE_SETTINGS);
+                button.setId(VIEW_ID_WAEX_SETTINGS);
                 int size = dp(activity, 24);
                 int margin = dp(activity, 16);
                 ViewGroup.MarginLayoutParams params =
@@ -479,9 +479,9 @@ public class SettingsInjector extends Feature {
                 return;
             }
 
-            if (root.findViewById(VIEW_ID_WAE_SETTINGS) != null || !(root instanceof FrameLayout)) return;
+            if (root.findViewById(VIEW_ID_WAEX_SETTINGS) != null || !(root instanceof FrameLayout)) return;
             ImageView floatingButton = createSettingsButton(activity);
-            floatingButton.setId(VIEW_ID_WAE_SETTINGS);
+            floatingButton.setId(VIEW_ID_WAEX_SETTINGS);
             int size = dp(activity, 40);
             int margin = dp(activity, 12);
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size, Gravity.TOP | Gravity.END);
@@ -497,7 +497,7 @@ public class SettingsInjector extends Feature {
         try {
             ViewGroup root = activity.findViewById(android.R.id.content);
             if (root == null) return;
-            View customRow = root.findViewById(VIEW_ID_WAE_SETTINGS);
+            View customRow = root.findViewById(VIEW_ID_WAEX_SETTINGS);
             if (customRow != null && customRow.getParent() instanceof ViewGroup) {
                 ((ViewGroup) customRow.getParent()).removeView(customRow);
             }
@@ -508,7 +508,7 @@ public class SettingsInjector extends Feature {
         try {
             ViewGroup root = activity.findViewById(android.R.id.content);
             if (root == null) return;
-            View button = root.findViewById(VIEW_ID_WAE_SETTINGS);
+            View button = root.findViewById(VIEW_ID_WAEX_SETTINGS);
             if (button != null && button.getParent() instanceof ViewGroup) {
                 ((ViewGroup) button.getParent()).removeView(button);
             }
@@ -559,7 +559,7 @@ public class SettingsInjector extends Feature {
 
     private void injectToolbarMenu(Menu menu, Activity activity) {
         try {
-            if (menu != null && menu.findItem(MENU_ID_WAE_SETTINGS) == null) {
+            if (menu != null && menu.findItem(MENU_ID_WAEX_SETTINGS) == null) {
                 String title = "WaEnhancerX Settings";
                 try {
                     String moduleTitle = com.waenhancer.xposed.core.FeatureLoader.getModuleString(activity, R.string.waenhancer_settings, "WaEnhancerX Settings");
@@ -568,7 +568,7 @@ public class SettingsInjector extends Feature {
                     }
                 } catch (Throwable ignored) {}
 
-                var item = menu.add(0, MENU_ID_WAE_SETTINGS, 0, title);
+                var item = menu.add(0, MENU_ID_WAEX_SETTINGS, 0, title);
                 var icon = DesignUtils.getDrawableByName("ic_settings");
                 if (icon != null) {
                     icon.setTint(0xff8696a0);

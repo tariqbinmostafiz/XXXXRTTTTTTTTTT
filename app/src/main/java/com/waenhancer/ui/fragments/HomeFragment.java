@@ -61,6 +61,7 @@ public class HomeFragment extends BaseFragment {
     private FragmentHomeBinding binding;
     private String pendingUpdateUrl;
     private String pendingUpdateVersion;
+    private BroadcastReceiver proStatusReceiver;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -83,6 +84,13 @@ public class HomeFragment extends BaseFragment {
                 }
             }
         }, intentFilter, ContextCompat.RECEIVER_EXPORTED);
+
+        proStatusReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                updateProUI();
+            }
+        };
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -313,6 +321,11 @@ public class HomeFragment extends BaseFragment {
             startActivity(intent);
         });
 
+        binding.proStatusChip.setOnClickListener(v -> {
+            animateClick(v);
+            launchLicenseActivity(requireContext());
+        });
+
         setupReleaseChannelSelector();
         setupUpdateBanner();
         startCardAnimations();
@@ -320,6 +333,19 @@ public class HomeFragment extends BaseFragment {
         showConsentDialogIfNeeded();
 
         return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull android.view.View view, @Nullable android.os.Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (binding != null && binding.proStatusChip != null) {
+            binding.proStatusChip.setOnClickListener(v -> {
+                android.content.Context context = getContext();
+                if (context != null) {
+                    launchLicenseActivity(context);
+                }
+            });
+        }
     }
     
     private void showConsentDialogIfNeeded() {
@@ -338,15 +364,20 @@ public class HomeFragment extends BaseFragment {
             acceptBtn.setOnClickListener(v -> {
                 prefs.edit().putBoolean("consent_crashlytics_asked", true)
                         .putBoolean("enable_crash_analytics", true).apply();
-                try {
-                    Class<?> firebaseAnalyticsClass = Class.forName("com.google.firebase.analytics.FirebaseAnalytics");
-                    Object analyticsInstance = firebaseAnalyticsClass.getMethod("getInstance", android.content.Context.class).invoke(null, requireContext());
-                    firebaseAnalyticsClass.getMethod("setAnalyticsCollectionEnabled", boolean.class).invoke(analyticsInstance, true);
-                    
-                    Class<?> firebaseCrashlyticsClass = Class.forName("com.google.firebase.crashlytics.FirebaseCrashlytics");
-                    Object crashlyticsInstance = firebaseCrashlyticsClass.getMethod("getInstance").invoke(null);
-                    firebaseCrashlyticsClass.getMethod("setCrashlyticsCollectionEnabled", boolean.class).invoke(crashlyticsInstance, true);
-                } catch (Throwable ignored) {}
+                if (!BuildConfig.DEBUG) {
+                    try {
+                        Class<?> firebaseAppClass = Class.forName("com.google.firebase.FirebaseApp");
+                        firebaseAppClass.getMethod("initializeApp", Context.class).invoke(null, requireContext().getApplicationContext());
+
+                        Class<?> firebaseAnalyticsClass = Class.forName("com.google.firebase.analytics.FirebaseAnalytics");
+                        Object analyticsInstance = firebaseAnalyticsClass.getMethod("getInstance", android.content.Context.class).invoke(null, requireContext());
+                        firebaseAnalyticsClass.getMethod("setAnalyticsCollectionEnabled", boolean.class).invoke(analyticsInstance, true);
+                        
+                        Class<?> firebaseCrashlyticsClass = Class.forName("com.google.firebase.crashlytics.FirebaseCrashlytics");
+                        Object crashlyticsInstance = firebaseCrashlyticsClass.getMethod("getInstance").invoke(null);
+                        firebaseCrashlyticsClass.getMethod("setCrashlyticsCollectionEnabled", boolean.class).invoke(crashlyticsInstance, true);
+                    } catch (Throwable ignored) {}
+                }
                 dialog.dismiss();
             });
 
@@ -436,6 +467,68 @@ public class HomeFragment extends BaseFragment {
         syncReleaseChannelToInstalled();
         checkForUpdates();
         checkStateWpp(requireActivity());
+
+        if (proStatusReceiver != null && getContext() != null) {
+            var proFilter = new IntentFilter(requireContext().getPackageName() + ".ACTION_PRO_STATUS_CHANGED");
+            ContextCompat.registerReceiver(requireContext(), proStatusReceiver, proFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        }
+
+        updateProUI();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (proStatusReceiver != null && getContext() != null) {
+            requireContext().unregisterReceiver(proStatusReceiver);
+        }
+    }
+
+    private void updateProUI() {
+        if (binding == null || getContext() == null) return;
+        boolean isPro = com.waenhancer.xposed.utils.ProHelper.isProEnabled();
+        String planName = com.waenhancer.xposed.utils.ProHelper.getProPlanName();
+        String proStatus = com.waenhancer.xposed.utils.ProHelper.getProStatus();
+        
+        if (binding.proStatusChip != null) {
+            String text;
+            if ("ACTIVE".equalsIgnoreCase(proStatus)) {
+                text = planName;
+            } else if ("EXPIRED".equalsIgnoreCase(proStatus)) {
+                text = "License Expired";
+            } else {
+                text = "Free";
+            }
+            binding.proStatusChip.setText(text);
+            
+            // Dynamically update chip's background tint and text colors based on status
+            if ("ACTIVE".equalsIgnoreCase(proStatus)) {
+                // Premium light green background with dark green text for Active Pro
+                binding.proStatusChip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE8F5E9));
+                binding.proStatusChip.setTextColor(0xFF2E7D32);
+            } else if ("EXPIRED".equalsIgnoreCase(proStatus)) {
+                // Light red background with dark red text for Expired Pro
+                binding.proStatusChip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFEBEE));
+                binding.proStatusChip.setTextColor(0xFFC62828);
+            } else {
+                // Standard default background tint and primary color text for Free status
+                android.util.TypedValue typedValueContainer = new android.util.TypedValue();
+                android.util.TypedValue typedValuePrimary = new android.util.TypedValue();
+                if (requireContext().getTheme().resolveAttribute(com.google.android.material.R.attr.colorPrimaryContainer, typedValueContainer, true)) {
+                    binding.proStatusChip.setBackgroundTintList(android.content.res.ColorStateList.valueOf(typedValueContainer.data));
+                } else {
+                    binding.proStatusChip.setBackgroundTintList(null); // fallback
+                }
+                if (requireContext().getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValuePrimary, true)) {
+                    binding.proStatusChip.setTextColor(typedValuePrimary.data);
+                } else {
+                    binding.proStatusChip.setTextColor(0xFF000000); // generic fallback
+                }
+            }
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                binding.proStatusChip.setCompoundDrawableTintList(binding.proStatusChip.getTextColors());
+            }
+        }
     }
 
     @SuppressLint("StringFormatInvalid")
@@ -744,8 +837,6 @@ public class HomeFragment extends BaseFragment {
 
             if (isSupported) {
                 boolean isBetaModule = BuildConfig.VERSION_NAME.toLowerCase().contains("beta");
-                // log beta
-                Log.d("WAE_BETA", "isBetaModule: " + isBetaModule);
                 if (!isBetaModule) {
 
                 if (ApkMirrorFeedHelper.isBetaVersion(activity, packageName, installedVersion)) {
@@ -1016,5 +1107,15 @@ public class HomeFragment extends BaseFragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    private void launchLicenseActivity(Context context) {
+        try {
+            Class<?> clazz = Class.forName("com.waenhancer.activities.LicenseActivity");
+            Intent intent = new Intent(context, clazz);
+            context.startActivity(intent);
+        } catch (ClassNotFoundException e) {
+            Toast.makeText(context, "Pro features are not available.", Toast.LENGTH_SHORT).show();
+        }
     }
 }

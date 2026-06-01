@@ -200,7 +200,7 @@ public class ResId {
                 } catch (Exception ignored) {}
             }
         } catch (Exception e) {
-            android.util.Log.e("WAE", "Local ResId init failed: " + e.getMessage());
+            android.util.Log.e("WAEX", "Local ResId init failed: " + e.getMessage());
         }
     }
 }

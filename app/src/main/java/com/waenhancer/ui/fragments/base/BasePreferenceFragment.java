@@ -139,6 +139,9 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
         setDisplayHomeAsUpEnabled(true);
         initializeReleaseChannelPreference();
         setupReleaseChannelPreference();
+
+        // Lockdown pro preferences dynamically if not verified
+        com.waenhancer.xposed.utils.ProHelper.updatePreferences(requireContext(), getPreferenceScreen());
     }
 
     @Override
@@ -211,6 +214,39 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
     }
 
     @Override
+    public boolean onPreferenceTreeClick(@NonNull androidx.preference.Preference preference) {
+        if (preference.getFragment() != null) {
+            try {
+                Class<?> clazz = Class.forName(preference.getFragment());
+                Object instance = clazz.getDeclaredConstructor().newInstance();
+                if (instance instanceof androidx.fragment.app.Fragment) {
+                    androidx.fragment.app.Fragment fragment = (androidx.fragment.app.Fragment) instance;
+                    fragment.setArguments(preference.getExtras());
+
+                    // Scope navigation to the correct fragment manager and container.
+                    androidx.fragment.app.FragmentManager fm = getParentFragmentManager();
+                    int containerId = android.view.View.NO_ID;
+                    if (getView() != null && getView().getParent() instanceof android.view.View) {
+                        containerId = ((android.view.View) getView().getParent()).getId();
+                    }
+                    if (containerId == android.view.View.NO_ID) {
+                        containerId = com.waenhancer.R.id.frag_container; // Fallback container
+                    }
+
+                    fm.beginTransaction()
+                            .replace(containerId, fragment)
+                            .addToBackStack(null)
+                            .commit();
+                    return true;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("WAEX", "Failed to navigate to fragment: " + preference.getFragment(), e);
+            }
+        }
+        return super.onPreferenceTreeClick(preference);
+    }
+
+    @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, @Nullable String s) {
         ;
         if (Objects.equals(s, "release_channel")) {
@@ -229,7 +265,8 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
                 s.equals("update_alert_frequency") || 
                 s.equals("last_update_check") || 
                 s.equals("show_hook_toast") || 
-                s.equals("open_wae");
+                s.equals("open_waex") ||
+                s.equals("open_settings_mode");
 
         if (!isInternalKey) {
             ;
@@ -244,7 +281,7 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
                     mPrefs.edit().putStringSet("pending_restart_changes", changes).apply();
                 }
             } catch (Exception e) {
-                android.util.Log.e("WAE_Manager", "Failed to track change title: " + e.getMessage());
+                android.util.Log.e("WAEX_Manager", "Failed to track change title: " + e.getMessage());
             }
 
             // Notify the Xposed module that preferences have changed via both ContentProvider and Broadcast
@@ -357,11 +394,11 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
             App.setThemeMode(mode);
         }
 
-        var colorMode = mPrefs.getString("wae_color_mode", "preset");
+        var colorMode = mPrefs.getString("waex_color_mode", "preset");
         var useMonet = Objects.equals(colorMode, "monet") && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
-        setPreferenceState("wae_color_preset", !useMonet);
+        setPreferenceState("waex_color_preset", !useMonet);
 
-        if (Objects.equals(key, "wae_color_mode") || Objects.equals(key, "wae_color_preset")) {
+        if (Objects.equals(key, "waex_color_mode") || Objects.equals(key, "waex_color_preset")) {
             if (getActivity() != null) {
                 getActivity().recreate();
             }
@@ -397,13 +434,8 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
 
         var sepPref = findPreference("separategroups");
         if (sepPref != null) {
-            if (com.waenhancer.BuildConfig.DEBUG) {
-                sepPref.setEnabled(true);
-                sepPref.setSummary(getString(com.waenhancer.R.string.separate_groups_sum));
-            } else {
-                setPreferenceState("separategroups", false);
-                sepPref.setSummary("Under development and will launch soon.");
-            }
+            sepPref.setEnabled(true);
+            sepPref.setSummary(getString(com.waenhancer.R.string.separate_groups_sum));
         }
         // Fully disable FilterGroups due to technical instability
         setPreferenceState("filtergroups", false);

@@ -474,7 +474,7 @@ public class ReflectionUtils {
                 }
             }
         } catch (Exception e) {
-            XposedBridge.log("[WAE-DEBUG] Error converting key to real: " + e);
+            XposedBridge.log("[WAEX-DEBUG] Error converting key to real: " + e);
         }
         return null;
     }

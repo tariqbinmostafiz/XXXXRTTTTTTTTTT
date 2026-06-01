@@ -204,7 +204,6 @@ public class MessageStore {
 
     public void storeMessageRead(String messageId) {
         if (sqLiteDatabase == null) return;
-        XposedBridge.log("storeMessageRead: " + messageId);
         try {
             if (sqLiteDatabase.isReadOnly()) {
                 ;

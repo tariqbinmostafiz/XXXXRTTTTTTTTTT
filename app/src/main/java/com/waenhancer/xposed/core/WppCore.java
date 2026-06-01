@@ -774,7 +774,7 @@ public class WppCore {
                 }
             }
         } catch (Exception e) {
-            XposedBridge.log("WAE: Error loading conversationDelegateField: " + e.getMessage());
+            XposedBridge.log("[WAEX] Error loading conversationDelegateField: " + e.getMessage());
         }
         try {
             if (conversationJidField == null) {
@@ -784,10 +784,7 @@ public class WppCore {
                 }
             }
         } catch (Exception e) {
-            XposedBridge.log("WAE: Error loading conversationJidField: " + e.getMessage());
-        }
-        if (Utils.DEBUG) {
-            XposedBridge.log("WAE: ensureConversationJidResolvers finished in " + (System.currentTimeMillis() - start) + "ms");
+            XposedBridge.log("[WAEX] Error loading conversationJidField: " + e.getMessage());
         }
     }
 
@@ -1195,7 +1192,7 @@ public class WppCore {
                 }
             });
         } catch (Exception e) {
-            XposedBridge.log("WAE: hookStatusToMessageMapper failed: " + e.getMessage());
+            XposedBridge.log("[WAEX] hookStatusToMessageMapper failed: " + e.getMessage());
         }
     }
 

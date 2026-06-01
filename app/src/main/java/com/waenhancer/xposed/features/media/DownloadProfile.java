@@ -38,7 +38,7 @@ public class DownloadProfile extends Feature {
             profileClass = Unobfuscator.findFirstClassUsingName(classLoader, StringMatchType.EndsWith, "ViewProfilePhoto");
             ;
         } catch (Exception e) {
-            XposedBridge.log("WAE: DownloadProfile: ViewProfilePhoto class not found: " + e.getMessage());
+            XposedBridge.log("[WAEX] DownloadProfile: ViewProfilePhoto class not found: " + e.getMessage());
             return;
         }
 

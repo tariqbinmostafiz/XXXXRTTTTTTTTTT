@@ -29,14 +29,14 @@ public final class PerfLogger {
         if (!enabled || startNs <= 0L) return;
         long elapsedMs = (SystemClock.elapsedRealtimeNanos() - startNs) / 1_000_000L;
         if (elapsedMs >= thresholdMs) {
-            XposedBridge.log(TAG + label + " took " + elapsedMs + "ms");
+            // Performance logging disabled in production
         }
     }
 
     public static void log(String label, long elapsedMs, long thresholdMs) {
         if (!enabled || elapsedMs <= 0L) return;
         if (elapsedMs >= thresholdMs) {
-            XposedBridge.log(TAG + label + " took " + elapsedMs + "ms");
+            // Performance logging disabled in production
         }
     }
 }

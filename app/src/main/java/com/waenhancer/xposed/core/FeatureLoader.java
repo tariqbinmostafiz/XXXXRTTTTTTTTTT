@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.waenhancer.App;
-
 import com.waenhancer.BuildConfig;
 import com.waenhancer.UpdateChecker;
 import com.waenhancer.xposed.core.components.AlertDialogWpp;
@@ -426,15 +425,39 @@ public class FeatureLoader {
     }
 
     private static void initComponents(ClassLoader loader, android.content.SharedPreferences pref) throws Exception {
-        FMessageWpp.initialize(loader);
-        WppCore.Initialize(loader, pref);
-        // Clear stale pending change titles from previous process.
-        // Must be after WppCore.Initialize() so privPrefs is available.
-        WppCore.setPrivString("pending_changes", "");
-        DesignUtils.setPrefs(pref);
-        Utils.init(loader);
-        AlertDialogWpp.initDialog(loader);
-        WaContactWpp.initialize(loader);
+        try {
+            FMessageWpp.initialize(loader);
+        } catch (Throwable t) {
+            XposedBridge.log("[WAEX] Failed to initialize FMessageWpp: " + t.getMessage());
+        }
+        try {
+            WppCore.Initialize(loader, pref);
+            // Clear stale pending change titles from previous process.
+            // Must be after WppCore.Initialize() so privPrefs is available.
+            WppCore.setPrivString("pending_changes", "");
+        } catch (Throwable t) {
+            XposedBridge.log("[WAEX] Failed to initialize WppCore: " + t.getMessage());
+        }
+        try {
+            DesignUtils.setPrefs(pref);
+        } catch (Throwable t) {
+            XposedBridge.log("[WAEX] Failed to initialize DesignUtils: " + t.getMessage());
+        }
+        try {
+            Utils.init(loader);
+        } catch (Throwable t) {
+            XposedBridge.log("[WAEX] Failed to initialize Utils: " + t.getMessage());
+        }
+        try {
+            AlertDialogWpp.initDialog(loader);
+        } catch (Throwable t) {
+            XposedBridge.log("[WAEX] Failed to initialize AlertDialogWpp: " + t.getMessage());
+        }
+        try {
+            WaContactWpp.initialize(loader);
+        } catch (Throwable t) {
+            XposedBridge.log("[WAEX] Failed to initialize WaContactWpp: " + t.getMessage());
+        }
         
         // Track update check per session
         final boolean[] hasCheckedThisSession = {false};
@@ -545,16 +568,13 @@ public class FeatureLoader {
         try {
             XSharedPreferences xpref = (XSharedPreferences) pref;
             xpref.reload();
+            java.io.File prefFile = xpref.getFile();
+            if (prefFile == null || !prefFile.exists()) {
+                return;
+            }
             var allPrefs = xpref.getAll();
             if (allPrefs == null || allPrefs.isEmpty()) {
-                XposedBridge.log("[WAEX] PREFS WARNING: XSharedPreferences returned empty data. "
-                        + "File: " + xpref.getFile().getAbsolutePath());
-                activity.runOnUiThread(() ->
-                        Toast.makeText(activity,
-                                "[WAEX] Unable to read preferences. Ensure the module is enabled and restart your device.",
-                                Toast.LENGTH_LONG).show());
-            } else if (Feature.DEBUG) {
-                XposedBridge.log("[WAEX] Prefs OK: " + allPrefs.size() + " entries loaded");
+                // Empty prefs data
             }
         } catch (Throwable t) {
             XposedBridge.log("[WAEX] checkPrefsReadable failed: " + t.getMessage());
@@ -727,8 +747,6 @@ public class FeatureLoader {
         // Settings screen injection is only relevant after home is available.
         FeatureRegistry.registerLazyFeature("Settings Injector", SettingsInjector.class,
                 FeatureRegistry.TriggerType.ACTIVITY_RESUMED, "HomeActivity", false);
-
-        XposedBridge.log("[FeatureRegistry] Registered " + FeatureRegistry.getRegisteredCount() + " lazy features");
     }
 
     /**
@@ -790,8 +808,6 @@ public class FeatureLoader {
                 }
             }
         });
-
-        XposedBridge.log("[FeatureRegistry] Lazy feature triggers initialized");
     }
 
     private static void plugins(@NonNull ClassLoader loader, @NonNull android.content.SharedPreferences pref,
@@ -870,10 +886,25 @@ public class FeatureLoader {
         // Check if lazy loading is enabled
         boolean lazyLoadingEnabled = pref.getBoolean("lazy_feature_loading", true);
 
-        for (var classe : classes) {
+        java.util.List<Class<?>> allFeatureClasses = new java.util.ArrayList<>(Arrays.asList(classes));
+        if (BuildConfig.HAS_PRO_FEATURES) {
+            try {
+                Class<?> proFeatureClass = Class.forName("com.waenhancer.pro.ProFeature");
+                allFeatureClasses.add(proFeatureClass);
+                
+                Class<?> msgBomberClass = Class.forName("com.waenhancer.pro.MessageBomber");
+                allFeatureClasses.add(msgBomberClass);
+
+                Class<?> deleteMsgFileClass = Class.forName("com.waenhancer.pro.DeleteMessageFile");
+                allFeatureClasses.add(deleteMsgFileClass);
+            } catch (Exception e) {
+                // Fail silently to prevent string leaks in stacktraces/logs
+            }
+        }
+
+        for (var classe : allFeatureClasses) {
             // Skip lazy features if lazy loading is enabled - they'll load on-demand
             if (lazyLoadingEnabled && FeatureRegistry.isLazyFeature(classe.getSimpleName())) {
-                XposedBridge.log("[FeatureLoader] Skipping " + classe.getSimpleName() + " (lazy loading enabled)");
                 continue;
             }
 
@@ -901,17 +932,9 @@ public class FeatureLoader {
         }
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
-                XposedBridge.log("WAE: Features failed to load within 15 seconds");
-            }
+            executorService.awaitTermination(15, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             XposedBridge.log(e);
-        }
-        if (DebugFeature.DEBUG) {
-            for (var time : times) {
-                if (time != null)
-                    XposedBridge.log(time);
-            }
         }
     }
 

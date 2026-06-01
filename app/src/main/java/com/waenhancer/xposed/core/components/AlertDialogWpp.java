@@ -104,7 +104,6 @@ public class AlertDialogWpp {
             setPositiveButtonMethod = null;
 
             for (java.lang.reflect.Method m : buttons) {
-                XposedBridge.log("[WAEX] AlertDialogWpp: Button candidate: " + m.getName() + " (" + Arrays.toString(m.getParameterTypes()) + ")");
                 if (m.getName().equals("setNegativeButton")) setNegativeButtonMethod = m;
                 else if (m.getName().equals("setNeutralButton")) setNeutralButtonMethod = m;
                 else if (m.getName().equals("setPositiveButton")) setPositiveButtonMethod = m;
@@ -130,20 +129,11 @@ public class AlertDialogWpp {
 
             isAvailable = true;
             ;
-            logClassMethods(alertDialogClass);
         } catch (Throwable e) {
             isAvailable = false;
             XposedBridge.log("[WAEX] AlertDialogWpp init failed: " + e.getMessage());
             XposedBridge.log(e);
         }
-    }
-
-    private static void logClassMethods(Class<?> clazz) {
-        XposedBridge.log("[WAEX] --- Methods for " + clazz.getName() + " ---");
-        for (Method m : clazz.getDeclaredMethods()) {
-            ;
-        }
-        ;
     }
 
 

@@ -34,7 +34,7 @@ import de.robv.android.xposed.XposedHelpers;
 
 public class MenuHome extends Feature {
 
-    private static final int MENU_ID_OPEN_WAE = 0x7EAE0001;
+    private static final int MENU_ID_OPEN_WAEX = 0x7EAE0001;
     private static final int MENU_ID_RESTART = 0x7EAE0002;
     private static final int MENU_ID_GHOST = 0x7EAE0003;
     private static final int MENU_ID_DND = 0x7EAE0004;
@@ -103,7 +103,7 @@ public class MenuHome extends Feature {
 
         synchronized (menuItems) {
             if (!internalItemsAdded) {
-                menuItems.add(this::InsertOpenWae);
+                menuItems.add(this::InsertOpenWaex);
                 menuItems.add((menu, activity) -> InsertGhostModeOption(menu, activity, "1".equals(homeMenuMode)));
                 menuItems.add((menu, activity) -> InsertDNDOption(menu, activity, "1".equals(homeMenuMode)));
                 menuItems.add((menu, activity) -> InsertFreezeLastSeenOption(menu, activity, "1".equals(homeMenuMode)));
@@ -116,14 +116,14 @@ public class MenuHome extends Feature {
         hookMenu(homeMenuMode);
     }
 
-    private void InsertOpenWae(Menu menu, Activity activity) {
-        String entryPoint = prefs.getString("open_wae", "1");
+    private void InsertOpenWaex(Menu menu, Activity activity) {
+        String entryPoint = prefs.getString("open_waex", "1");
         if (!"1".equals(entryPoint)) return; // Only show in home menu if explicitly set to '1'
         if (!prefs.getBoolean("wa_enhancer_button", true)) return;
-        if (menu.findItem(MENU_ID_OPEN_WAE) != null) return;
+        if (menu.findItem(MENU_ID_OPEN_WAEX) != null) return;
 
         String title = com.waenhancer.xposed.core.FeatureLoader.getModuleString(activity, R.string.waenhancer_settings, "WaEnhancerX Settings");
-        var itemMenu = menu.add(0, MENU_ID_OPEN_WAE, 0, title);
+        var itemMenu = menu.add(0, MENU_ID_OPEN_WAEX, 0, title);
         
         itemMenu.setOnMenuItemClickListener(item -> {
             Utils.openModule(activity);

@@ -260,13 +260,6 @@ public class IGStatusAdapter extends ArrayAdapter {
             try {
                 Object jidObj = findJidObject(item, 4);
                 if (jidObj == null) {
-                    XposedBridge.log("WAEX-ERR: WAE Jid object not found in status item class: " + item.getClass().getName());
-                    for (java.lang.reflect.Field f : item.getClass().getDeclaredFields()) {
-                        try {
-                            f.setAccessible(true);
-                            XposedBridge.log("  Field: " + f.getName() + " (" + f.getType().getName() + ") = " + f.get(item));
-                        } catch (Throwable ignored) {}
-                    }
                     this.userJid = new FMessageWpp.UserJid("status@broadcast");
                 } else if (jidObj instanceof String) {
                     this.userJid = new FMessageWpp.UserJid((String) jidObj);

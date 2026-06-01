@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ApkMirrorFeedHelper {
-    private static final String TAG = "WAE_ApkMirrorFeedHelper";
+    private static final String TAG = "WAEX_ApkMirrorFeedHelper";
     
     private static final String FEED_WPP = "https://www.apkmirror.com/apk/whatsapp-inc/whatsapp-messenger/feed/";
     private static final String FEED_BUSINESS = "https://www.apkmirror.com/apk/whatsapp-inc/whatsapp-messenger-business/feed/";
@@ -45,15 +45,12 @@ public class ApkMirrorFeedHelper {
                 boolean hasCachedBusiness = prefs.getStringSet(PREF_BETA_BUSINESS, null) != null && !prefs.getStringSet(PREF_BETA_BUSINESS, new HashSet<>()).isEmpty();
                 
                 if (now - lastFetch < TimeUnit.HOURS.toMillis(24) && hasCachedWpp && hasCachedBusiness) {
-                    Log.d(TAG, "Using cached APKMirror feed versions");
                     if (onComplete != null) {
                         onComplete.run();
                     }
                     return;
                 }
 
-                Log.d(TAG, "Fetching latest versions from APKMirror feeds via direct headless WebView...");
-                
                 Set<String> betaWpp = new HashSet<>();
                 Set<String> betaBusiness = new HashSet<>();
 
@@ -78,11 +75,6 @@ public class ApkMirrorFeedHelper {
                     .putStringSet(PREF_BETA_WPP, betaWpp)
                     .putStringSet(PREF_BETA_BUSINESS, betaBusiness)
                     .apply();
-            Log.d(TAG, "Successfully updated APKMirror feed cache.");
-            Log.i(TAG, "Parsed WhatsApp Messenger Beta versions: " + betaWpp.toString());
-            Log.i(TAG, "Parsed WhatsApp Business Beta versions: " + betaBusiness.toString());
-        } else {
-            Log.w(TAG, "Fetched beta versions were empty. Skipping caching to force retry on next run.");
         }
         if (onComplete != null) {
             onComplete.run();
@@ -119,14 +111,12 @@ public class ApkMirrorFeedHelper {
                 boolean hasCached = prefs.getStringSet(prefBetaKey, null) != null && !prefs.getStringSet(prefBetaKey, new HashSet<>()).isEmpty();
                 
                 if (now - lastFetch < TimeUnit.HOURS.toMillis(24) && hasCached) {
-                    Log.d(TAG, "Using cached APKMirror feed versions for package " + packageName);
                     if (onComplete != null) {
                         onComplete.run();
                     }
                     return;
                 }
 
-                Log.d(TAG, "Fetching latest versions from APKMirror feed via direct headless WebView for package " + packageName + "...");
                 Set<String> betaVersions = new HashSet<>();
 
                 fetchFeedViaWebView(context, feedUrl, betaVersions, () -> {
@@ -147,10 +137,6 @@ public class ApkMirrorFeedHelper {
                     .putLong(prefLastFetchKey, now)
                     .putStringSet(prefBetaKey, betaVersions)
                     .apply();
-            Log.d(TAG, "Successfully updated APKMirror feed cache for " + packageName + ".");
-            Log.i(TAG, "Parsed beta versions for package " + packageName + ": " + betaVersions.toString());
-        } else {
-            Log.w(TAG, "Fetched package beta versions were empty. Skipping cache update to force retry on next run.");
         }
         if (onComplete != null) {
             onComplete.run();
@@ -168,7 +154,7 @@ public class ApkMirrorFeedHelper {
                 
                 webView.setWebViewClient(new android.webkit.WebViewClient() {
                     private boolean finished = false;
-
+ 
                     @Override
                     public void onPageFinished(android.webkit.WebView view, String url) {
                         if (finished) return;
@@ -193,10 +179,9 @@ public class ApkMirrorFeedHelper {
                             );
                         }, 2500);
                     }
-
+ 
                     @Override
                     public void onReceivedError(android.webkit.WebView view, int errorCode, String description, String failingUrl) {
-                        Log.w(TAG, "WebView failed to load URL: " + failingUrl + " - error: " + description);
                         view.destroy();
                         onDone.run();
                     }
@@ -320,7 +305,6 @@ public class ApkMirrorFeedHelper {
         }
 
         if (betaVersions != null && (betaVersions.contains(cleanVersion) || betaVersions.contains(versionName))) {
-            Log.d(TAG, "Version " + versionName + " matches a known beta version from APKMirror for package " + packageName);
             return true;
         }
 
