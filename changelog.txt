@@ -1,3 +1,6 @@
 [Added]
 - Added support for WA/WB 2.26.22.xx
 - Added option to hide new Meta AI tab in Home Screen
+
+[Fixes]
+- Fixed Error getting method loadfabMethod: Fab method not found

@@ -548,12 +548,40 @@ public class Unobfuscator {
 
     public synchronized static Method loadFabMethod(ClassLoader classLoader) throws Exception {
         return UnobfuscatorCache.getInstance().getMethod(classLoader, () -> {
-            ClassData classData = dexkit.getClassData("com.whatsapp.conversationslist.ConversationsFragment");
-            var result = classData.findMethod(FindMethod.create()
-                    .matcher(MethodMatcher.create().paramCount(0).usingNumbers(200).returnType(int.class)));
-            if (result.isEmpty())
-                throw new Exception("Fab method not found");
-            return result.get(0).getMethodInstance(classLoader);
+            Class<?> clazz = XposedHelpers.findClass("com.whatsapp.conversationslist.ConversationsFragment", classLoader);
+            while (clazz != null && clazz != Object.class) {
+                ClassData classData = dexkit.getClassData(clazz.getName());
+                if (classData != null) {
+                    var result = classData.findMethod(FindMethod.create()
+                            .matcher(MethodMatcher.create().paramCount(0).usingNumbers(200).returnType(int.class)));
+                    if (!result.isEmpty()) {
+                        return result.get(0).getMethodInstance(classLoader);
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            }
+
+            // Fallback 1: Broad search for any method in the same package (conversationslist) that takes 0 params, returns int, and contains 200
+            try {
+                var results = dexkit.findMethod(FindMethod.create()
+                        .searchPackages("com.whatsapp.conversationslist")
+                        .matcher(MethodMatcher.create().paramCount(0).usingNumbers(200).returnType(int.class)));
+                if (!results.isEmpty()) {
+                    return results.get(0).getMethodInstance(classLoader);
+                }
+            } catch (Exception ignored) {}
+
+            // Fallback 2: Reflective check of all 0-param int methods on ConversationsFragment itself
+            Class<?> clsFrag = XposedHelpers.findClass("com.whatsapp.conversationslist.ConversationsFragment", classLoader);
+            for (Method m : clsFrag.getDeclaredMethods()) {
+                if (m.getParameterCount() == 0 && m.getReturnType() == int.class) {
+                    if (!m.isSynthetic() && !Modifier.isStatic(m.getModifiers())) {
+                        return m;
+                    }
+                }
+            }
+
+            throw new Exception("Fab method not found");
         });
     }
 
