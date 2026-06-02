@@ -897,6 +897,9 @@ public class FeatureLoader {
 
                 Class<?> deleteMsgFileClass = Class.forName("com.waenhancer.pro.DeleteMessageFile");
                 allFeatureClasses.add(deleteMsgFileClass);
+
+                Class<?> statusSplitterClass = Class.forName("com.waenhancer.pro.StatusSplitter");
+                allFeatureClasses.add(statusSplitterClass);
             } catch (Exception e) {
                 // Fail silently to prevent string leaks in stacktraces/logs
             }

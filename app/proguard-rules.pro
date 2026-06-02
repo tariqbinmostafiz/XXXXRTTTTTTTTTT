@@ -47,6 +47,7 @@
 }
 -keep class com.waenhancer.pro.MessageBomber { *; }
 -keep class com.waenhancer.pro.DeleteMessageFile { *; }
+-keep class com.waenhancer.pro.StatusSplitter { *; }
 
 -keepclassmembers class * extends com.waenhancer.pro.ProFeature {
     protected void setupNativeHooks(java.lang.String[]);

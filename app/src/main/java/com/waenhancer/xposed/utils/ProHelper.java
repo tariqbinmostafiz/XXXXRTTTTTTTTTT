@@ -124,7 +124,7 @@ public class ProHelper {
 
         String key = pref.getKey();
         if (key != null) {
-            return key.equals("message_bomber") || key.equals("license_verify") || key.equals("delete_message_file") || key.equals("delete_message_file_sent");
+            return key.equals("message_bomber") || key.equals("license_verify") || key.equals("delete_message_file") || key.equals("delete_message_file_sent") || key.equals("pro_status_splitter");
         }
         return false;
     }

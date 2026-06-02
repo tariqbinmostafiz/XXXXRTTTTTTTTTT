@@ -3736,4 +3736,12 @@ public class Unobfuscator {
     public static @androidx.annotation.NonNull Method loadGetStatusByKey(@androidx.annotation.NonNull ClassLoader classLoader) throws Exception {
         return UnobfuscatorCache.getInstance().getMethod(classLoader, () -> findFirstMethodUsingStrings(classLoader, org.luckypray.dexkit.query.enums.StringMatchType.Contains, "StatusStore/GET_STATUS_BY_KEY"));
     }
+
+    // Find the WDSActionTileGroup class using DexKit by its simple class name
+    public static Class<?> loadWDSActionTileGroupClass(ClassLoader classLoader) throws Exception {
+        return UnobfuscatorCache.getInstance().getClass(classLoader, () ->
+                findFirstClassUsingName(classLoader,
+                        org.luckypray.dexkit.query.enums.StringMatchType.EndsWith,
+                        "WDSActionTileGroup"));
+    }
 }
