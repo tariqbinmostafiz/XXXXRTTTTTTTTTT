@@ -122,6 +122,12 @@
             app:title="@string/custom_reaction" />
 
         <rikka.material.preference.MaterialSwitchPreference
+            app:defaultValue="false"
+            app:key="selectable_message"
+            app:summary="@string/selectable_message_sum"
+            app:title="@string/selectable_message" />
+
+        <rikka.material.preference.MaterialSwitchPreference
             app:key="google_translate"
             app:summary="@string/google_translate_sum"
             app:title="@string/google_translate" />

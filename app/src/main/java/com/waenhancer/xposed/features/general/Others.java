@@ -294,6 +294,22 @@ public class Others extends Feature {
             messageDeviceSourceTag();
         }
 
+        if (prefs.getBoolean("selectable_message", false)) {
+            ConversationItemListener.conversationListeners.add(new ConversationItemListener.OnConversationItemListener() {
+                @Override
+                public void onItemBind(FMessageWpp fMessage, ViewGroup viewGroup) {
+                    try {
+                        var messageTextView = (TextView) viewGroup.findViewById(Utils.getID("message_text", "id"));
+                        if (messageTextView != null) {
+                            messageTextView.setTextIsSelectable(true);
+                        }
+                    } catch (Throwable t) {
+                        logDebug("Selectable message bind error", t);
+                    }
+                }
+            });
+        }
+
         try {
             doubleTapReaction();
         } catch (Exception e) {

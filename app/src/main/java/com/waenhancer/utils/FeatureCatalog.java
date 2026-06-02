@@ -476,6 +476,14 @@ public class FeatureCatalog {
                                 "conversation",
                                 Arrays.asList("reaction", "emoji", "custom")));
 
+                catalog.add(new SearchableFeature("selectable_message",
+                                context.getString(R.string.selectable_message),
+                                context.getString(R.string.selectable_message_sum),
+                                SearchableFeature.Category.GENERAL_CONVERSATION,
+                                SearchableFeature.FragmentType.GENERAL,
+                                "conversation",
+                                Arrays.asList("selectable", "text", "message", "bubble", "chat", "copy")));
+
                 catalog.add(new SearchableFeature("google_translate",
                                 context.getString(R.string.google_translate),
                                 context.getString(R.string.google_translate_sum),
