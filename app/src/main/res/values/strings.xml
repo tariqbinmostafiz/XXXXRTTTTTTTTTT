@@ -394,7 +394,7 @@
     <string name="custom_reaction">Custom Reaction</string>
     <string name="custom_reaction_sum">Select which reaction will be sent when double clicking on the message</string>
     <string name="selectable_message">Make Message Text Selectable</string>
-    <string name="selectable_message_sum">Allow selecting text directly inside the chat bubbles</string>
+    <string name="selectable_message_sum">Long-pressing message text opens a bottom sheet to select and copy text. Native selection is disabled to prevent scrolling lag and format issues.</string>
     <string name="hide_audio_seen">Hide audio seen</string>
     <string name="hide_audio_seen_sum">Hides the sending of audio reading when listening to it</string>
     <string name="ghost_mode">Ghost mode</string>
