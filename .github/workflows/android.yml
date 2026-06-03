@@ -243,7 +243,7 @@ jobs:
       - name: Rename APK to versioned name
         run: |
           mkdir -p release_artifacts
-          cp app/build/outputs/apk/whatsapp/release/app-whatsapp-release.apk "release_artifacts/WaEnhancerX-v${{ env.NEW_VERSION_NAME }}.apk"
+          cp app/build/outputs/apk/whatsapp/release/WaEnhancerX-v${{ env.NEW_VERSION_NAME }}.apk "release_artifacts/WaEnhancerX-v${{ env.NEW_VERSION_NAME }}.apk"
 
       - name: Upload WhatsApp flavor artifact
         uses: actions/upload-artifact@v5
