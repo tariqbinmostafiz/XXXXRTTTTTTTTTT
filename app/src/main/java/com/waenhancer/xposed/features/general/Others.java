@@ -56,6 +56,9 @@ import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import okhttp3.OkHttpClient;
+import android.net.Uri;
+import java.io.File;
+import com.waenhancer.xposed.utils.AudioToOpusConverter;
 
 public class Others extends Feature {
     private static final String DEVICE_SOURCE_SUFFIX_FIELD = "wae_device_source_suffix";
@@ -87,6 +90,7 @@ public class Others extends Feature {
 
     @Override
     public void doHook() throws Exception {
+        reloadPrefs();
         if (DEBUG) {
             ;
         }
@@ -109,6 +113,7 @@ public class Others extends Feature {
         var disable_defemojis = prefs.getBoolean("disable_defemojis", false);
         var autonext_status = prefs.getBoolean("autonext_status", false);
         var audio_type = Integer.parseInt(prefs.getString("audio_type", "0"));
+        XposedBridge.log("[WAEX] Others.doHook: loaded audio_type preference = " + audio_type);
         var audio_transcription = prefs.getBoolean("audio_transcription", false);
         var oldStatus = prefs.getBoolean("oldstatus", false);
         var igstatus = prefs.getBoolean("igstatus", false);
@@ -1207,21 +1212,100 @@ public class Others extends Feature {
         });
     }
 
-
     private void sendAudioType(int audio_type) throws Exception {
         var sendAudioTypeMethod = Unobfuscator.loadSendAudioTypeMethod(classLoader);
-        logDebug(Unobfuscator.getMethodDescriptor(sendAudioTypeMethod));
         XposedBridge.hookMethod(sendAudioTypeMethod, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 var results = ReflectionUtils.findInstancesOfType(param.args, Integer.class);
                 if (results.size() < 2) {
-                    logDebug("sendAudioTypeMethod size < 2");
                     return;
                 }
                 var mediaType = results.get(0);
                 var audioType = results.get(1);
-                if (mediaType.second != 2 && mediaType.second != 9) return;
+                if (mediaType.second != 2 && mediaType.second != 9) {
+                    return;
+                }
+
+                if (audio_type == 2) {
+                    // Transcode local audio to Opus before sending as voice note
+                    android.net.Uri originalUri = null;
+                    int uriArgIndex = -1;
+
+                    var uris = ReflectionUtils.findInstancesOfType(param.args, android.net.Uri.class);
+                    if (!uris.isEmpty()) {
+                        originalUri = uris.get(0).second;
+                        uriArgIndex = uris.get(0).first;
+                    }
+
+                    java.lang.reflect.Field fileField = null;
+                    Object fileFieldContainer = null;
+                    java.io.File originalFile = null;
+
+                    if (originalUri == null) {
+                        // Scan arguments for a non-null java.io.File field
+                        for (Object arg : param.args) {
+                            if (arg == null) continue;
+                            Class<?> clazz = arg.getClass();
+                            while (clazz != null && clazz != Object.class) {
+                                try {
+                                    for (java.lang.reflect.Field f : clazz.getDeclaredFields()) {
+                                        if (f.getType() == java.io.File.class) {
+                                            f.setAccessible(true);
+                                            java.io.File fileVal = (java.io.File) f.get(arg);
+                                            if (fileVal != null) {
+                                                originalFile = fileVal;
+                                                fileField = f;
+                                                fileFieldContainer = arg;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } catch (Throwable ignored) {}
+                                if (originalFile != null) break;
+                                clazz = clazz.getSuperclass();
+                            }
+                            if (originalFile != null) break;
+                        }
+                        if (originalFile != null) {
+                            originalUri = android.net.Uri.fromFile(originalFile);
+                        }
+                    }
+
+                    if (originalUri != null) {
+                        Context context = Utils.getApplication();
+                        if (context != null) {
+                            java.io.File transcodedFile = AudioToOpusConverter.convert(context, originalUri);
+                            if (transcodedFile != null && transcodedFile.exists()) {
+                                boolean replacedOnDisk = false;
+                                if (originalFile != null && originalFile.exists()) {
+                                    try {
+                                        copyFile(transcodedFile, originalFile);
+                                        replacedOnDisk = true;
+                                    } catch (Throwable t) {
+                                        XposedBridge.log("[WAEX-AudioToOpus] Error overwriting original file: " + t.toString());
+                                    }
+                                }
+
+                                if (!replacedOnDisk) {
+                                    if (uriArgIndex != -1) {
+                                        param.args[uriArgIndex] = android.net.Uri.fromFile(transcodedFile);
+                                    }
+                                    if (fileField != null && fileFieldContainer != null) {
+                                        try {
+                                            fileField.set(fileFieldContainer, transcodedFile);
+                                        } catch (Throwable t) {
+                                            XposedBridge.log("[WAEX-AudioToOpus] Error replacing File field: " + t.toString());
+                                        }
+                                    }
+                                }
+                                param.args[audioType.first] = 1; // 1 = voice notes
+                                return;
+                            }
+                        }
+                    }
+                }
+
                 param.args[audioType.first] = audio_type - 1; // 1 = voice notes || 0 = audio voice
             }
         });
@@ -1237,6 +1321,17 @@ public class Others extends Feature {
                 originFMessageField.setInt(fMessage, audio_type - 1);
             }
         });
+    }
+
+    private static void copyFile(java.io.File src, java.io.File dest) throws java.io.IOException {
+        try (java.io.InputStream in = new java.io.FileInputStream(src);
+             java.io.OutputStream out = new java.io.FileOutputStream(dest)) {
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+        }
     }
 
 

@@ -1,15 +1,8 @@
 [Added]
-- [Pro] Added Always Typing / Recording Voice Feature
-- Customize Status View
-    * [Pro] Added Disable Swipe Up to Reply
 
 
 [Improvements]
 - Optimized conversation messages scroll to avoid lags
 
 [Fixes]
-- Fixed crash in recordings audio player when loading corrupt or unplayable audio files
-- Fixed CustomView Plugin Error
-- Fixed MODE_WORLD_READABLE exception
-- Fixed My Status Views
-- Fixed an issue where chat date separators (Today, Yesterday, etc.) went missing or displayed time formats when Time Customization was loaded
+- Fixed sending file as audio note
