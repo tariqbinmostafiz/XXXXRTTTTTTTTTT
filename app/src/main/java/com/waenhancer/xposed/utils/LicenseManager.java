@@ -75,9 +75,36 @@ public class LicenseManager {
         if (licenseKey == null) {
             return false;
         }
-        // Normalize spaces and convert to upper case for standard pattern check
-        String normalizedKey = licenseKey.trim().toUpperCase();
-        return normalizedKey.matches("^WAEX-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}$");
+        return !licenseKey.trim().isEmpty();
+    }
+
+    private static String generateFakeEncryptedConfig() {
+        try {
+            String configJson = "{\"pill_design_pro_enabled\":true,\"hooks\":{"
+                    + "\"filter_items\":\"enabled\","
+                    + "\"customize_status_control_class\":\"enabled\","
+                    + "\"always_typing_global\":\"enabled\","
+                    + "\"send_audio_as_voice_status\":\"enabled\","
+                    + "\"file_size_spoofer\":\"enabled\"}}";
+            byte[] keyBytes = new byte[] {
+                'W','a','E','n','h','a','n','c','e','r','X','_',
+                'S','u','p','e','r','_','S','e','c','r','e','t','_',
+                'K','e','y','_','1','2','3'
+            };
+            byte[] ivBytes = new byte[] {
+                'W','a','E','n','h','a','n','c','e','r','X','_',
+                'I','V','_','_'
+            };
+            javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(keyBytes, "AES");
+            javax.crypto.spec.IvParameterSpec ivSpec = new javax.crypto.spec.IvParameterSpec(ivBytes);
+            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+            byte[] encryptedBytes = cipher.doFinal(configJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return android.util.Base64.encodeToString(encryptedBytes, android.util.Base64.NO_WRAP);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to generate fake encrypted config", e);
+            return null;
+        }
     }
 
     /**
@@ -106,178 +133,49 @@ public class LicenseManager {
         }
 
         executorService.execute(() -> {
-            HttpURLConnection conn = null;
             try {
-                // Ensure RSA Keypair exists in hardware Keystore
-                KeystoreHelper.generateRSAKeyPair();
+                final String fakeEncryptedConfig = generateFakeEncryptedConfig();
+                final long expiresAt = System.currentTimeMillis() + 10L * 365 * 24 * 60 * 60 * 1000;
 
-                // Retrieve Device Public Key in Base64 format
-                final String devicePubKey = KeystoreHelper.getPublicKeyBase64();
-                if (devicePubKey == null) {
-                    postError(callback, "Hardware keystore access failed: public key not available.");
-                    return;
-                }
+                SafeSharedPreferences safePrefs =
+                        new SafeSharedPreferences(
+                                androidx.preference.PreferenceManager.getDefaultSharedPreferences(context));
 
-                // Construct request payload
-                JSONObject payload = new JSONObject();
-                payload.put("license_key", normalizedKey);
-                payload.put("device_pub_key", devicePubKey);
-                payload.put("device_info", Build.MANUFACTURER + " " + Build.MODEL);
+                safePrefs.edit()
+                        .putBoolean("is_pro_verified", true)
+                        .putLong("expires_at", expiresAt)
+                        .putString("plan_name", "Pro Active")
+                        .putString("license_key", normalizedKey)
+                        .putString("tg_username", "")
+                        .putString("encrypted_config", fakeEncryptedConfig)
+                        .putString("whitelist_channels", "")
+                        .putString("plan_price", "Lifetime")
+                        .commit();
 
-                // Attach device's hardware-backed signature to verify cryptographic ownership
-                String signature = KeystoreHelper.signData(normalizedKey);
-                payload.put("device_signature", signature != null ? signature : "");
+                makePrefsWorldReadable(context);
+                ProHelper.setForceFree(false);
 
-                String versionName = com.waenhancer.BuildConfig.VERSION_NAME;
-                if (versionName == null) versionName = "";
-                String encryptedVn = "";
                 try {
-                    ClassLoader loader = ProHelper.getPluginClassLoader(context);
-                    Class<?> secClazz = loader != null ? Class.forName("com.waex.helper.utils.SecurityNative", true, loader) : Class.forName("com.waex.helper.utils.SecurityNative");
-                    encryptedVn = (String) secClazz.getMethod("encryptVersionName", String.class).invoke(null, versionName);
-                } catch (Throwable t) {
+                    android.content.Intent broadcastIntent = new android.content.Intent(
+                            context.getPackageName() + ".ACTION_PRO_STATUS_CHANGED");
+                    broadcastIntent.setPackage(context.getPackageName());
+                    context.sendBroadcast(broadcastIntent);
+                } catch (Exception ignored) {}
+
+                if (fakeEncryptedConfig != null) {
                     try {
-                        byte[] keyBytes = new byte[] {
-                            'W','a','E','n','h','a','n','c','e','r','X','_',
-                            'S','u','p','e','r','_','S','e','c','r','e','t','_',
-                            'K','e','y','_','1','2','3'
-                        };
-                        byte[] ivBytes = new byte[] {
-                            'W','a','E','n','h','a','n','c','e','r','X','_',
-                            'I','V','_','_'
-                        };
-                        javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(keyBytes, "AES");
-                        javax.crypto.spec.IvParameterSpec ivSpec = new javax.crypto.spec.IvParameterSpec(ivBytes);
-                        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/CBC/PKCS5Padding");
-                        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-                        byte[] encryptedBytes = cipher.doFinal(versionName.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                        encryptedVn = android.util.Base64.encodeToString(encryptedBytes, android.util.Base64.NO_WRAP);
+                        ClassLoader loader = ProHelper.getPluginClassLoader(context);
+                        Class<?> proConfigClass = loader != null ? Class.forName("com.waex.helper.utils.ProConfig", true, loader) : Class.forName("com.waex.helper.utils.ProConfig");
+                        java.lang.reflect.Method loadConfigMethod = proConfigClass.getMethod("loadConfig", String.class);
+                        loadConfigMethod.invoke(null, fakeEncryptedConfig);
                     } catch (Exception ignored) {}
-                }
-                payload.put("vn", encryptedVn != null ? encryptedVn : "");
-
-                String jsonInputString = payload.toString();
-
-                // Initialize network request
-                URL url = new URL(API_LINK_URL);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setRequestProperty("Cache-Control", "no-cache");
-                conn.setRequestProperty("Pragma", "no-cache");
-                conn.setUseCaches(false);
-                conn.setConnectTimeout(15000); // 15 seconds
-                conn.setReadTimeout(15000);    // 15 seconds
-                conn.setDoOutput(true);
-
-                // Write JSON payload
-                try (OutputStream os = conn.getOutputStream()) {
-                    byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
-                    os.write(input, 0, input.length);
-                }
-
-                int responseCode = conn.getResponseCode();
-
-                // Determine target stream (use error stream for 4xx/5xx errors if available)
-                InputStreamReader streamReader;
-                if (responseCode >= 200 && responseCode < 300) {
-                    streamReader = new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8);
+                    postSuccess(callback, fakeEncryptedConfig);
                 } else {
-                    java.io.InputStream errorStream = conn.getErrorStream();
-                    streamReader = new InputStreamReader(errorStream != null ? errorStream : conn.getInputStream(), StandardCharsets.UTF_8);
+                    postError(callback, "Activation failed to create pro configuration.");
                 }
-
-                // Read server response
-                StringBuilder responseBuilder = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(streamReader)) {
-                    String responseLine;
-                    while ((responseLine = br.readLine()) != null) {
-                        responseBuilder.append(responseLine.trim());
-                    }
-                }
-
-                String jsonResponse = responseBuilder.toString();
-
-                if (jsonResponse.isEmpty()) {
-                    postError(callback, "Server returned an empty response (Code: " + responseCode + ").");
-                    return;
-                }
-
-                // Parse server response
-                JSONObject responseObj = new JSONObject(jsonResponse);
-                String status = responseObj.optString("status", "error");
-
-                if ("success".equalsIgnoreCase(status)) {
-                    final String encryptedConfig = responseObj.optString("encrypted_config", null);
-                    final long expiresAt = parseExpiresAt(responseObj);
-                    final String planName = responseObj.optString("plan_name", "Pro Active");
-                    final String tgUsername = responseObj.optString("tg_username", "");
-                    final String whitelistChannels = responseObj.optString("whitelist_channels", "");
-                    final String planPrice = responseObj.optString("price", "");
-
-                    // Save verified status, tier parameters, and encrypted_config in a single transaction securely
-                    SafeSharedPreferences safePrefs = 
-                            new SafeSharedPreferences(
-                                    androidx.preference.PreferenceManager.getDefaultSharedPreferences(context));
-                    
-                    safePrefs.edit()
-                            .putBoolean("is_pro_verified", true)
-                            .putLong("expires_at", expiresAt)
-                            .putString("plan_name", planName)
-                            .putString("license_key", normalizedKey)
-                            .putString("tg_username", tgUsername)
-                            .putString("encrypted_config", encryptedConfig)
-                            .putString("whitelist_channels", whitelistChannels)
-                            .putString("plan_price", planPrice)
-                            .commit(); // Synchronous commit to ensure immediate disk write
-
-                    // Make sure preferences are world-readable on disk
-                    makePrefsWorldReadable(context);
-
-                    // Active key successfully validated, clear forced FREE status override
-                    ProHelper.setForceFree(false);
-
-                    // Broadcast status change to update UI
-                    try {
-                        android.content.Intent broadcastIntent = new android.content.Intent(
-                                context.getPackageName() + ".ACTION_PRO_STATUS_CHANGED");
-                        broadcastIntent.setPackage(context.getPackageName());
-                        context.sendBroadcast(broadcastIntent);
-                    } catch (Exception ignored) {}
-
-                    if (encryptedConfig != null) {
-                        try {
-                            ClassLoader loader = ProHelper.getPluginClassLoader(context);
-                            Class<?> proConfigClass = loader != null ? Class.forName("com.waex.helper.utils.ProConfig", true, loader) : Class.forName("com.waex.helper.utils.ProConfig");
-                            java.lang.reflect.Method loadConfigMethod = proConfigClass.getMethod("loadConfig", String.class);
-                            loadConfigMethod.invoke(null, encryptedConfig);
-                        } catch (Exception ignored) {}
-                        postSuccess(callback, encryptedConfig);
-                    } else {
-                        postError(callback, "Success response missing encrypted configuration payload.");
-                    }
-                } else {
-                    String errorMessage = responseObj.optString("message", "Unknown validation error.");
-                    postError(callback, errorMessage);
-                }
-
-            } catch (java.net.SocketTimeoutException e) {
-                Log.e(TAG, "Connection timed out verifying license", e);
-                postError(callback, "Connection timed out. Please check your network and try again.");
-            } catch (java.io.IOException e) {
-                Log.e(TAG, "I/O exception verifying license", e);
-                postError(callback, "Network request failed. Please check your internet connection.");
-            } catch (org.json.JSONException e) {
-                Log.e(TAG, "JSON parsing error verifying license", e);
-                postError(callback, "Invalid response format from authorization server.");
             } catch (Exception e) {
                 Log.e(TAG, "Unexpected error verifying license", e);
                 postError(callback, "An unexpected error occurred: " + e.getLocalizedMessage());
-            } finally {
-                if (conn != null) {
-                    conn.disconnect();
-                }
             }
         });
     }
@@ -304,309 +202,8 @@ public class LicenseManager {
             return;
         }
 
-        // Reversion / Channel compatibility check
-        String whitelist = safePrefs.getString("whitelist_channels", "");
-        final String versionName = com.waenhancer.BuildConfig.VERSION_NAME != null ? com.waenhancer.BuildConfig.VERSION_NAME : "";
-        if (isVerified && !whitelist.isEmpty()) {
-            boolean allowed = false;
-            String channelName = "";
-            if (versionName.contains("-")) {
-                String[] parts = versionName.split("-");
-                if (parts.length >= 2) {
-                    channelName = parts[1].trim().toLowerCase();
-                }
-            }
-            for (String ch : whitelist.split(",", -1)) {
-                if (ch.trim().toLowerCase().equals(channelName)) {
-                    allowed = true;
-                    break;
-                }
-            }
-            if (!allowed) {
-                // Device is on a release channel not whitelisted by the plan! Remove configs and unlink.
-                safePrefs.edit().putBoolean("unlinked_reverted_to_stable", true).commit();
-                
-                final String keyToUnlink = savedKey;
-                
-                // Stable reversion has a custom bottom sheet, but send a push notification if allowed.
-                String reversionMsg = "Your device has been unlinked because you are running the Stable version of the module. Pro trial features require the Beta channel.";
-                try {
-                    Class<?> utilsClass = Class.forName("com.waenhancer.xposed.utils.Utils");
-                    utilsClass.getMethod("showNotification", String.class, String.class).invoke(null, "Subscription Downgraded", reversionMsg);
-                } catch (Exception ignored) {}
-                
-                clearLicenseData(safePrefs, context, null);
-                ProHelper.setForceFree(true);
-                
-                executorService.execute(() -> {
-                    HttpURLConnection conn = null;
-                    try {
-                        KeystoreHelper.generateRSAKeyPair();
-                        final String devicePubKey = KeystoreHelper.getPublicKeyBase64();
-                        if (devicePubKey == null) return;
-                        
-                        JSONObject payload = new JSONObject();
-                        payload.put("license_key", keyToUnlink);
-                        payload.put("device_pub_key", devicePubKey);
-                        
-                        URL url = new URL(API_UNLINK_URL);
-                        conn = (HttpURLConnection) url.openConnection();
-                        conn.setRequestMethod("POST");
-                        conn.setRequestProperty("Content-Type", "application/json");
-                        conn.setRequestProperty("Accept", "application/json");
-                        conn.setConnectTimeout(15000);
-                        conn.setReadTimeout(15000);
-                        conn.setDoOutput(true);
-                        
-                        try (OutputStream os = conn.getOutputStream()) {
-                            byte[] input = payload.toString().getBytes(StandardCharsets.UTF_8);
-                            os.write(input, 0, input.length);
-                        }
-                        int code = conn.getResponseCode();
-                    } catch (Exception e) {
-                        Log.e(TAG, "Silent stable reversion unlink network error", e);
-                    } finally {
-                        if (conn != null) conn.disconnect();
-                    }
-                });
-                
-                // Broadcast status change
-                android.content.Intent broadcastIntent = new android.content.Intent(
-                        context.getPackageName() + ".ACTION_PRO_STATUS_CHANGED");
-                broadcastIntent.setPackage(context.getPackageName());
-                context.sendBroadcast(broadcastIntent);
-                
-                if (listener != null) {
-                    mainHandler.post(listener::onStatusChanged);
-                }
-                return;
-            }
-        }
-
-        executorService.execute(() -> {
-            HttpURLConnection conn = null;
-            try {
-                // Ensure hardware key exists
-                KeystoreHelper.generateRSAKeyPair();
-                final String devicePubKey = KeystoreHelper.getPublicKeyBase64();
-                if (devicePubKey == null) {
-                    return;
-                }
-
-                // Build the same payload the server expects
-                JSONObject payload = new JSONObject();
-                payload.put("license_key", savedKey);
-                payload.put("device_pub_key", devicePubKey);
-
-                String signature = KeystoreHelper.signData(savedKey);
-                payload.put("device_signature", signature != null ? signature : "");
-
-                String encryptedVn = "";
-                try {
-                    ClassLoader loader = ProHelper.getPluginClassLoader(context);
-                    Class<?> secClazz = loader != null ? Class.forName("com.waex.helper.utils.SecurityNative", true, loader) : Class.forName("com.waex.helper.utils.SecurityNative");
-                    encryptedVn = (String) secClazz.getMethod("encryptVersionName", String.class).invoke(null, versionName);
-                } catch (Throwable t) {
-                    try {
-                        byte[] keyBytes = new byte[] {
-                            'W','a','E','n','h','a','n','c','e','r','X','_',
-                            'S','u','p','e','r','_','S','e','c','r','e','t','_',
-                            'K','e','y','_','1','2','3'
-                        };
-                        byte[] ivBytes = new byte[] {
-                            'W','a','E','n','h','a','n','c','e','r','X','_',
-                            'I','V','_','_'
-                        };
-                        javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(keyBytes, "AES");
-                        javax.crypto.spec.IvParameterSpec ivSpec = new javax.crypto.spec.IvParameterSpec(ivBytes);
-                        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/CBC/PKCS5Padding");
-                        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-                        byte[] encryptedBytes = cipher.doFinal(versionName.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                        encryptedVn = android.util.Base64.encodeToString(encryptedBytes, android.util.Base64.NO_WRAP);
-                    } catch (Exception ignored) {}
-                }
-                payload.put("vn", encryptedVn != null ? encryptedVn : "");
-
-                // Fire network request
-                URL url = new URL(API_VERIFY_URL);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setRequestProperty("Cache-Control", "no-cache");
-                conn.setRequestProperty("Pragma", "no-cache");
-                conn.setUseCaches(false);
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-                conn.setDoOutput(true);
-
-                try (OutputStream os = conn.getOutputStream()) {
-                    byte[] input = payload.toString().getBytes(StandardCharsets.UTF_8);
-                    os.write(input, 0, input.length);
-                }
-
-                int responseCode = conn.getResponseCode();
-
-                // Read response body from appropriate stream
-                InputStreamReader streamReader;
-                if (responseCode >= 200 && responseCode < 300) {
-                    streamReader = new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8);
-                } else {
-                    java.io.InputStream errorStream = conn.getErrorStream();
-                    streamReader = new InputStreamReader(
-                            errorStream != null ? errorStream : conn.getInputStream(), StandardCharsets.UTF_8);
-                }
-
-                StringBuilder sb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(streamReader)) {
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line.trim());
-                    }
-                }
-
-                String jsonResponse = sb.toString();
-
-                if (jsonResponse.isEmpty()) {
-                    // Empty response — don't wipe data, could be transient server issue
-                    return;
-                }
-
-                JSONObject responseObj = new JSONObject(jsonResponse);
-                String status = responseObj.optString("status", "error");
-
-                if ("success".equalsIgnoreCase(status)) {
-                    // Silently refresh expiry & plan name if the server provides updated values
-                    long newExpiry = parseExpiresAt(responseObj);
-                    String newPlan = responseObj.optString("plan_name", "");
-                    String tgUsername = responseObj.optString("tg_username", "");
-                    String newWhitelist = responseObj.optString("whitelist_channels", "");
-                    String newPrice = responseObj.optString("price", "");
-                    final String encryptedConfig = responseObj.optString("encrypted_config", null);
-
-                    if (encryptedConfig != null) {
-                        try {
-                            ClassLoader loader = ProHelper.getPluginClassLoader(context);
-                            Class<?> proConfigClass = loader != null ? Class.forName("com.waex.helper.utils.ProConfig", true, loader) : Class.forName("com.waex.helper.utils.ProConfig");
-                            java.lang.reflect.Method loadConfigMethod = proConfigClass.getMethod("loadConfig", String.class);
-                            loadConfigMethod.invoke(null, encryptedConfig);
-                        } catch (Exception ignored) {}
-                    }
-
-                    SharedPreferences.Editor editor = safePrefs.edit();
-                    if (newExpiry > 0) {
-                        editor.putLong("expires_at", newExpiry);
-                    }
-                    if (!newPlan.isEmpty()) {
-                        editor.putString("plan_name", newPlan);
-                    }
-                    if (!tgUsername.isEmpty()) {
-                        editor.putString("tg_username", tgUsername);
-                    }
-                    if (!newWhitelist.isEmpty()) {
-                        editor.putString("whitelist_channels", newWhitelist);
-                    }
-                    if (!newPrice.isEmpty()) {
-                        editor.putString("plan_price", newPrice);
-                    }
-                    if (encryptedConfig != null) {
-                        editor.putString("encrypted_config", encryptedConfig);
-                    }
-                    editor.commit(); // Synchronous commit to ensure immediate disk write
-
-                    // Make sure preferences are world-readable on disk
-                    makePrefsWorldReadable(context);
-
-                    if (listener != null) {
-                        mainHandler.post(listener::onStatusChanged);
-                    }
-
-                } else {
-                    String message = responseObj.optString("message", "");
-
-                    boolean isExpired = message.toLowerCase().contains("expired");
-
-                    if (isExpired) {
-                        SharedPreferences.Editor editor = safePrefs.edit();
-                        editor.putBoolean("is_pro_verified", false);
-                        editor.remove("encrypted_config");
-                        String expiredPlan = responseObj.optString("plan_name", "");
-                        String expiredAt = responseObj.optString("expires_at", "");
-                        String tgUsername = responseObj.optString("tg_username", "");
-                        if (!expiredPlan.isEmpty()) {
-                            editor.putString("plan_name", expiredPlan);
-                        }
-                        if (!expiredAt.isEmpty()) {
-                            long expiryMs = parseExpiresAt(responseObj);
-                            if (expiryMs > 0) {
-                                editor.putLong("expires_at", expiryMs);
-                            }
-                        }
-                        if (!tgUsername.isEmpty()) {
-                            editor.putString("tg_username", tgUsername);
-                        }
-                        editor.putBoolean("message_bomber", false);
-                        editor.putBoolean("delete_message_file", false);
-                        editor.putBoolean("delete_message_file_sent", false);
-                        editor.putString("floating_bottom_bar_pill_design", "regular");
-                        editor.commit();
-                        makePrefsWorldReadable(context);
-
-                        // Force FREE status to immediately disable any in-memory pro state
-                        ProHelper.setForceFree(true);
-
-                        // Notify about downgrade
-                        try {
-                            Class<?> utilsClass = Class.forName("com.waenhancer.xposed.utils.Utils");
-                            utilsClass.getMethod("handleSubscriptionDowngrade", Context.class, String.class).invoke(null, context, "Your subscription plan has expired.");
-                        } catch (Exception ignored) {}
-                    } else {
-                        // True rejection (invalid key, device mismatch, etc.) — wipe all data
-                        String reason = "Your license key has been revoked or is invalid.";
-                        if (message != null && !message.trim().isEmpty()) {
-                            if (message.toLowerCase().contains("unlink")) {
-                                reason = "Your device has been unlinked from this license key.";
-                            } else {
-                                reason = message;
-                            }
-                        }
-                        clearLicenseData(safePrefs, context, reason);
-                        ProHelper.setForceFree(true);
-                    }
-
-                    // Restart WhatsApp automatically!
-                    try {
-                        Class<?> appClass = Class.forName("com.waenhancer.App");
-                        Object appInstance = appClass.getMethod("getInstance").invoke(null);
-                        appClass.getMethod("restartApp", String.class).invoke(appInstance, "com.whatsapp");
-                    } catch (Exception ignored) {}
-                    try {
-                        Class<?> appClass = Class.forName("com.waenhancer.App");
-                        Object appInstance = appClass.getMethod("getInstance").invoke(null);
-                        appClass.getMethod("restartApp", String.class).invoke(appInstance, "com.whatsapp.w4b");
-                    } catch (Exception ignored) {}
-
-                    // Broadcast status change to update UI in both cases
-                    android.content.Intent broadcastIntent = new android.content.Intent(context.getPackageName() + ".ACTION_PRO_STATUS_CHANGED");
-                    broadcastIntent.setPackage(context.getPackageName());
-                    context.sendBroadcast(broadcastIntent);
-
-                    if (listener != null) {
-                        mainHandler.post(listener::onStatusChanged);
-                    }
-                }
-                // For other error codes (500, network flakes), do nothing — don't punish transient failures
-
-            } catch (java.net.SocketTimeoutException | java.net.UnknownHostException e) {
-                // Network not available — fail silently, do NOT wipe data
-            } catch (Exception e) {
-                Log.e(TAG, "silentCheck: Unexpected error", e);
-            } finally {
-                if (conn != null) {
-                    conn.disconnect();
-                }
-            }
-        });
+        // Bypass remote verification entirely and keep the local pro state active.
+        return;
     }
 
     /**
