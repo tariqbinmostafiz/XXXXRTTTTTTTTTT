@@ -85,9 +85,13 @@ public class LicenseManager {
                     + "\"customize_status_control_class\":\"enabled\","
                     + "\"always_typing_global\":\"enabled\","
                     + "\"send_audio_as_voice_status\":\"enabled\","
-                    + "\"file_size_spoofer\":\"enabled\"}}";
+                    + "\"file_size_spoofer\":\"enabled\"," 
+                    + "\"message_bomber\":\"enabled\"," 
+                    + "\"delete_message_file\":\"enabled\"," 
+                    + "\"pro_status_splitter\":\"enabled\"}}";
             byte[] keyBytes = new byte[] {
                 'W','a','E','n','h','a','n','c','e','r','X','_',
+
                 'S','u','p','e','r','_','S','e','c','r','e','t','_',
                 'K','e','y','_','1','2','3'
             };

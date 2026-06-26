@@ -148,11 +148,41 @@ public class ProHelper {
 
     public static synchronized ClassLoader getPluginClassLoader(Context context, ClassLoader parentLoader, ClassLoader xposedLoader) {
         saveContext(context);
-        if (!isPluginInstalled(context)) {
+
+        boolean pluginAppPresent = false;
+        Context ctx = context != null ? context : getStaticContext();
+        if (ctx != null) {
+            boolean isXposed = !BuildConfig.APPLICATION_ID.equals(ctx.getPackageName());
+            if (isXposed) {
+                try {
+                    android.os.Bundle pluginInfo = ctx.getContentResolver().call(
+                            android.net.Uri.parse("content://" + BuildConfig.APPLICATION_ID + ".hookprovider"),
+                            "get_pro_plugin_info",
+                            null,
+                            null
+                    );
+                    if (pluginInfo != null && pluginInfo.getString("sourceDir") != null) {
+                        pluginAppPresent = true;
+                    }
+                } catch (Throwable ignored) {
+                }
+            } else {
+                try {
+                    android.content.pm.ApplicationInfo appInfo = ctx.getPackageManager().getApplicationInfo("com.waex.helper", 0);
+                    if (appInfo != null && appInfo.sourceDir != null && new java.io.File(appInfo.sourceDir).exists()) {
+                        pluginAppPresent = true;
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+
+        if (!pluginAppPresent) {
             companionPluginClassLoader = null;
             companionPluginPath = null;
             return null;
         }
+
         String cachedPath = null;
         String cachedLibPath = null;
         if (companionPluginClassLoader != null
@@ -560,6 +590,29 @@ public class ProHelper {
         return null;
     }
 
+    private static boolean isLocalProLicensePresent() {
+        SharedPreferences prefs = getPrefs();
+        if (prefs == null) {
+            return false;
+        }
+        String licenseKey = prefs.getString("license_key", "").trim();
+        boolean isVerified = prefs.getBoolean("is_pro_verified", false);
+        if (!isVerified || licenseKey.isEmpty()) {
+            return false;
+        }
+        long expiresAt = 0;
+        try {
+            expiresAt = prefs.getLong("expires_at", 0);
+        } catch (ClassCastException e) {
+            try {
+                String expiresStr = prefs.getString("expires_at", "0");
+                expiresAt = Long.parseLong(expiresStr);
+            } catch (Exception ignored) {
+            }
+        }
+        return expiresAt <= 0 || expiresAt > System.currentTimeMillis();
+    }
+
     private static String decrypt(String encryptedBase64) {
         try {
             byte[] keyBytes = new byte[]{
@@ -766,9 +819,6 @@ public class ProHelper {
      * Checks if the Pro licensing status is currently active.
      */
     public static boolean isProEnabled() {
-        if (!isPluginInstalled(getStaticContext())) {
-            return false;
-        }
         return "ACTIVE".equalsIgnoreCase(getProStatus());
     }
 
@@ -876,7 +926,7 @@ public class ProHelper {
         if (group == null) return;
         saveContext(context);
         boolean pluginInstalled = isPluginInstalled(context);
-        boolean proActive = pluginInstalled && isProEnabled();
+        boolean proActive = isProEnabled();
 
         for (int i = 0; i < group.getPreferenceCount(); i++) {
             Preference pref = group.getPreference(i);
@@ -1286,31 +1336,32 @@ public class ProHelper {
     }
 
     public static boolean isPluginPackageInstalled(Context context) {
-        if (context == null) return false;
+        if (context == null) return isLocalProLicensePresent();
         
-        // If we are in the main app, use PackageManager directly
+        boolean exists = false;
         if (BuildConfig.APPLICATION_ID.equals(context.getPackageName())) {
             try {
                 context.getPackageManager().getPackageInfo("com.waex.helper", 0);
-                return true;
-            } catch (Exception e) {
-                return false;
+                exists = true;
+            } catch (Exception ignored) {
+                exists = false;
+            }
+        } else {
+            try {
+                android.os.Bundle pluginInfo = context.getContentResolver().call(
+                        android.net.Uri.parse("content://" + BuildConfig.APPLICATION_ID + ".hookprovider"),
+                        "get_pro_plugin_info",
+                        null,
+                        null
+                );
+                if (pluginInfo != null && pluginInfo.getString("sourceDir") != null) {
+                    exists = true;
+                }
+            } catch (Throwable ignored) {
+                exists = false;
             }
         }
-        
-        // Otherwise (we are in WhatsApp/Xposed process), query the HookProvider
-        try {
-            android.os.Bundle pluginInfo = context.getContentResolver().call(
-                    android.net.Uri.parse("content://" + BuildConfig.APPLICATION_ID + ".hookprovider"),
-                    "get_pro_plugin_info",
-                    null,
-                    null
-            );
-            if (pluginInfo != null && pluginInfo.getString("sourceDir") != null) {
-                return true;
-            }
-        } catch (Throwable ignored) {}
-        return false;
+        return exists || isLocalProLicensePresent();
     }
 
     public static int getPluginMinWaexVersion(Context context) {
@@ -1369,6 +1420,12 @@ public class ProHelper {
             return false;
         }
 
+        // If a local Pro license is activated, treat the helper plugin as present
+        // for gating logic, even when the separate com.waex.helper APK is missing.
+        if (isLocalProLicensePresent()) {
+            return true;
+        }
+
         boolean isXposed = !BuildConfig.APPLICATION_ID.equals(ctx.getPackageName());
         int minVersion = 0;
         boolean exists = false;
@@ -1408,7 +1465,7 @@ public class ProHelper {
         }
 
         if (!exists) {
-            return false;
+            return isLocalProLicensePresent();
         }
 
         if (minVersion > 0) {
@@ -1422,9 +1479,11 @@ public class ProHelper {
                 }
                 if (myVersionCode < minVersion) {
                     android.util.Log.e("WaeX-Helper", "Plugin requires main module version code >= " + minVersion + ", but current version is " + myVersionCode);
-                    return false;
+                    return isLocalProLicensePresent();
                 }
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+                return isLocalProLicensePresent();
+            }
         }
         return true;
     }
