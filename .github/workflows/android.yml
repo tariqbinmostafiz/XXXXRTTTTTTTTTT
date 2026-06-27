@@ -3,7 +3,7 @@ name: Android CI
 on:
   push:
     branches: ["master", "beta"]
-
+  workflow_dispatch:
 jobs:
   check-build-flag:
     runs-on: ubuntu-latest
@@ -244,24 +244,7 @@ jobs:
           tag_name: ${{ env.NEW_VERSION_NAME }}
           prerelease: ${{ env.RELEASE_PRERELEASE }}
 
-      - name: Sync commits and push custom tag to Xposed Repo fork
-        run: |
-          git remote add xposed-repo https://x-access-token:${{ secrets.XPOSED_REPO_TOKEN }}@github.com/Xposed-Modules-Repo/com.waenhancer.git
-          git push xposed-repo HEAD:master --force || git push xposed-repo HEAD:main --force
-          git tag ${{ env.NEW_VERSION_CODE }}-${{ env.NEW_VERSION_NAME }}
-          git push xposed-repo ${{ env.NEW_VERSION_CODE }}-${{ env.NEW_VERSION_NAME }}
-
-      - name: Upload to Xposed Repo release
-        uses: softprops/action-gh-release@v2
-        with:
-          repository: Xposed-Modules-Repo/com.waenhancer
-          token: ${{ secrets.XPOSED_REPO_TOKEN }}
-          name: WaEnhancerX v${{ env.NEW_VERSION_NAME }}
-          body_path: changelog.txt
-          files: |
-            release_artifacts/WaEnhancerX-v${{ env.NEW_VERSION_NAME }}.apk
-          tag_name: ${{ env.NEW_VERSION_CODE }}-${{ env.NEW_VERSION_NAME }}
-          prerelease: ${{ env.RELEASE_PRERELEASE }}
+ 
 
       - name: Read changelog
         id: changelog
@@ -271,24 +254,3 @@ jobs:
           sed '/./,$!d' changelog.txt >> "$GITHUB_OUTPUT"
           echo "" >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
-
-      - name: Post release to Telegram
-        if: env.RELEASE_PRERELEASE == 'false'
-        env:
-          CHANGELOG_BODY: ${{ steps.changelog.outputs.body }}
-          RELEASE_URL: ${{ steps.release.outputs.url }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-        run: |
-          if [ -z "$BOT_TOKEN" ] || [ -z "$CHANNEL_ID" ]; then
-            echo "Telegram credentials missing. Skipping notification."
-            exit 0
-          fi
-          
-          CLEAN_BODY=$(printf '%s' "$CHANGELOG_BODY" | sed '/./,$!d' | cut -c 1-4000)
-          FULL_MESSAGE="$(printf 'STABLE %s\n\n%s\n\nRelease: %s' "${{ env.NEW_VERSION_NAME }}" "$CLEAN_BODY" "$RELEASE_URL")"
-
-          curl -f -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${CHANNEL_ID}" \
-            --data-urlencode "text=$FULL_MESSAGE" \
-            -d "disable_web_page_preview=true"
